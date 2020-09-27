@@ -269,6 +269,25 @@ static char *game_list_description (int index)
 	return ((char *)0);
 }
 
+static int load_game_config(char *game)
+{
+	char text[512];
+	FILE *f;
+	int i=0;
+
+	/* Read game configuration */
+	sprintf(text,"%s/frontend/%s.cfg",mamedir,game);
+	f=fopen(text,"r");
+	if (f) {
+		fscanf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",&odx_freq,&odx_video_depth,&odx_video_aspect,&odx_video_sync,
+		&odx_frameskip,&odx_sound,&odx_clock_cpu,&odx_clock_sound,&odx_cpu_cores,&odx_ramtweaks,&i,&odx_cheat,&odx_gsensor);
+		fclose(f);
+		return 0;
+	}
+	/* Config file not found */
+	return 1;
+}
+
 static int show_options(char *game)
 {
 	unsigned long ExKey=0;
@@ -282,13 +301,7 @@ static int show_options(char *game)
 	int i=0;
 
 	/* Read game configuration */
-	sprintf(text,"%s/frontend/%s.cfg",mamedir,game);
-	f=fopen(text,"r");
-	if (f) {
-		fscanf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",&odx_freq,&odx_video_depth,&odx_video_aspect,&odx_video_sync,
-		&odx_frameskip,&odx_sound,&odx_clock_cpu,&odx_clock_sound,&odx_cpu_cores,&odx_ramtweaks,&i,&odx_cheat,&odx_gsensor);
-		fclose(f);
-	}
+	load_game_config(game);
 	
 	while(1)
 	{
@@ -1102,6 +1115,8 @@ int main (int argc, char **argv)
 		/* Prevents to run 2 times */
 		if (strcmp (gameid, "cache") == 0)
 			exit (0);
+		/* Loads game specific options if it exists */
+		load_game_config(gameid);
 		/* Get the right emulator to run */
 		execute_game (game_list_emu (gameid),gameid);
 	}
