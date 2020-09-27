@@ -669,9 +669,13 @@ void execute_game (char *playemu, char *playgame)
 	if ((odx_video_aspect>=5) && (odx_video_aspect<=9))
 	{
 		args[n]="-rotatecontrols"; n++;
+		#ifdef _GCW0_
+		// rotate left and use right stick
+		args[n]="-rol"; n++;
+		#else
 		args[n]="-ror"; n++;
+		#endif
 	}
-	
 	/* odx_video_sync */
 	if (odx_video_sync==1)
 	{

@@ -115,12 +115,13 @@ unsigned int odx_joystick_read()
 			if (axis_y > 32) { res |=  OD_DOWN;  } // DOWN
 		}
 		else {
-			axis_x = SDL_JoystickGetAxis(odx_joyanalog, 1)/256;
-			axis_y = SDL_JoystickGetAxis(odx_joyanalog, 0)/256;
-			if (axis_y < -32) res |= OD_LEFT;
-			if (axis_y >  32) res |= OD_RIGHT;
-			if (axis_x < -32) res |= OD_UP;
-			if (axis_x >  32) res |= OD_DOWN;
+			// use right stick if rotated (rol)
+			axis_x = SDL_JoystickGetAxis(odx_joyanalog, 3)/256;
+			axis_y = SDL_JoystickGetAxis(odx_joyanalog, 2)/256;
+			if (axis_y < -32) res |= OD_RIGHT;
+			if (axis_y >  32) res |= OD_LEFT;
+			if (axis_x < -32) res |= OD_DOWN;
+			if (axis_x >  32) res |= OD_UP;
 		}
 		
 		if (SDL_JoystickGetButton(odx_joyanalog,0)) { res |=  OD_A;  }  // BUTTON A
