@@ -6,3 +6,4 @@ Icon=icon
 Categories=emulators;
 X-OD-Manual=readme.txt
 X-OD-Filter=.zip
+X-OD-Alias=aliases.txt
