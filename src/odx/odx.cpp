@@ -139,7 +139,8 @@ int main (int argc, char **argv)
 	if (res != 1234)
 	{
 		odx_deinit();
-		execl("mame.dge", "mame.dge", "cache", NULL);
+		/* restart UI only if started from UI */
+		if (options.ui_restart) execl("mame.dge", "mame.dge", NULL);
 		exit (res);
 	}
 
@@ -365,7 +366,8 @@ int main (int argc, char **argv)
 
    	odx_deinit();
 
-    execl("mame.dge", "mame.dge", "cache", NULL);
+	/* restart UI only if started from UI */
+	if (options.ui_restart) execl("mame.dge", "mame.dge", NULL);
 
 	exit (res);
 }

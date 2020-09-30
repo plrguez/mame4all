@@ -304,6 +304,7 @@ void parse_cmdline (int argc, char **argv, int game_index)
 	/* misc configuration */
 	options.cheat      = get_bool ("config", "cheat", NULL, 0);
 	options.mame_debug = get_bool ("config", "debug", NULL, 0);
+	options.ui_restart = get_bool ("config", "restart", NULL, 0);
 
 	cheatfile  = get_string ("config", "cheatfile", "cf", "cheat.dat");
 

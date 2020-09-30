@@ -16,7 +16,7 @@
 
 #define COMPATCORES 1
 
-char build_version[] = "GCW0 V1.2";
+char build_version[] = "GCW0 V1.2 R7";
 
 /* Remove splash screen */
 // static unsigned char splash_bmp[BMP_SIZE];
@@ -184,7 +184,7 @@ static void game_list_view(int *pos) {
 	odx_gamelist_text_out( 4, 30,"Select ROM");
 	odx_gamelist_text_out( 4, 230,"A=Select Game/Start  B=Back");
 	odx_gamelist_text_out( 268, 230,"L+R=Exit");
-	odx_gamelist_text_out( 264,2,build_version);
+	odx_gamelist_text_out( 244,2,build_version);
 
 	/* Check Limits */
 	if (*pos<0)
@@ -314,7 +314,7 @@ static int show_options(char *game)
 		odx_gamelist_text_out( 4, 30,"Game Options");
 		odx_gamelist_text_out( 4, 230,"A=Select Game/Start  B=Back");
 		odx_gamelist_text_out( 268, 230,"L+R=Exit");
-		odx_gamelist_text_out( 264,2,build_version);
+		odx_gamelist_text_out( 244,2,build_version);
 
 		/* Draw the options */
 		strncpy (text,game_list_description(last_game_selected),33);
@@ -628,7 +628,7 @@ static void select_game(char *emu, char *game)
 	}
 }
 
-void execute_game (char *playemu, char *playgame)
+void execute_game (char *playemu, char *playgame, int restart)
 {
 	char *args[255];
 	char str[8][64];
@@ -815,6 +815,9 @@ void execute_game (char *playemu, char *playgame)
     args[n]="-rompath"; n++;;
 	args[n]=romdir;n++;
 	
+	/* Restart UI is started from the UI */
+	if (restart == 1) args[n]="-restart"; n++;
+
 	args[n]=NULL;
 
 #if 0
@@ -927,7 +930,7 @@ signed int get_romdir(char *result) {
 			odx_gamelist_text_out( 4, 215,current_dir_short );
 			odx_gamelist_text_out( 4, 230,"A=Enter dir START=Select dir");
 			odx_gamelist_text_out( 280, 230,"B=Quit");
-			odx_gamelist_text_out( 264,2,build_version);
+			odx_gamelist_text_out( 244,2,build_version);
 			
 			for(i = 0, current_filedir_number = i + current_filedir_scroll_value; i < FILE_LIST_ROWS; i++, current_filedir_number++) {
 #define CHARLEN ((320/6)-2)
@@ -1095,8 +1098,8 @@ int main (int argc, char **argv)
 
 	if (argc==1)
 	{
-		/* Execute Game */
-		execute_game (playemu,playgame);
+		/* Execute Game with UI restart */
+		execute_game (playemu,playgame,1);
 	}
 	else
 	{
@@ -1112,13 +1115,10 @@ int main (int argc, char **argv)
 			p = argv[1] + strlen(argv[1]);
 		memcpy (gameid, argv[1], p - argv[1]);
 		gameid[p - argv[1]]='\0';
-		/* Prevents to run 2 times */
-		if (strcmp (gameid, "cache") == 0)
-			exit (0);
 		/* Loads game specific options if it exists */
 		load_game_config(gameid);
-		/* Get the right emulator to run */
-		execute_game (game_list_emu (gameid),gameid);
+		/* Get the right emulator to run and start without UI restart */
+		execute_game (game_list_emu (gameid),gameid,0);
 	}
 
 }

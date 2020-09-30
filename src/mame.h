@@ -76,6 +76,7 @@ struct GameOptions {
 
 	int mame_debug;
 	int cheat;
+	int ui_restart;
 	int gui_host;
 
 	int samplerate;
