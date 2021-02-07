@@ -15,7 +15,7 @@ COMPILE EXECUTABLES FOR GCW CONSOLE
 
 make -f makefile.odx
 make -f makefile.odx TARGET=neomame
-make -f makefile.odx mame.gpe
+make -f makefile.odx mame.dge
 
 
 MAME4ALL 2.7 - Source Code (30/april/2012)
@@ -77,7 +77,7 @@ MAME LICENSE
 http://www.mame.net
 http://www.mamedev.com
 
-Copyright © 1997-2009, Nicola Salmoria and the MAME team. All rights reserved. 
+Copyright ï¿½ 1997-2009, Nicola Salmoria and the MAME team. All rights reserved. 
 
 Redistribution and use of this code or any derivative works are permitted provided
 that the following conditions are met: 

@@ -3,6 +3,13 @@
 #OSTYPE=oda320
 OSTYPE=gcw0
 
+ifeq "$(OSTYPE)" "gcw0"	
+	# Uncomment to build for OD BETA
+	OD_BETA = 1
+	# Choose profiling phase (PHASE = 1 or 2, 0 is inactive)
+	OD_PROFILE = 0
+endif
+
 ifeq ($(TARGET),)
 TARGET = mame
 # TARGET = neomame
@@ -22,21 +29,21 @@ VPATH=src $(wildcard src/cpu/*)
 
 # define regarding OS, which compiler, linker and utilities to use
 ifeq "$(OSTYPE)" "msys"	
-TOOLCHAIN = /c/MinGW32
-CC          = $(TOOLCHAIN)/bin/gcc
-CPP         = $(TOOLCHAIN)/bin/gcc
-LD          = $(TOOLCHAIN)/bin/gcc
+	TOOLCHAIN = /c/MinGW32
+	CC          = $(TOOLCHAIN)/bin/gcc
+	CPP         = $(TOOLCHAIN)/bin/gcc
+	LD          = $(TOOLCHAIN)/bin/gcc
 else
-
-ifeq "$(OSTYPE)" "gcw0"	
-TOOLCHAIN = /opt/gcw0-toolchain/usr
-else
-TOOLCHAIN = /opt/opendingux-toolchain/usr
-endif
-
-CC = $(TOOLCHAIN)/bin/mipsel-linux-gcc
-CPP = $(TOOLCHAIN)/bin/mipsel-linux-gcc
-LD = $(TOOLCHAIN)/bin/mipsel-linux-gcc
+	ifeq "$(OSTYPE)" "gcw0"	
+	TOOLCHAIN = /opt/gcw0-toolchain/usr
+	# Usefull for OD BETA only
+	HUGEEDIT = $(TOOLCHAIN)/bin/hugeedit
+	else
+	TOOLCHAIN = /opt/opendingux-toolchain/usr
+	endif
+	CC = $(TOOLCHAIN)/bin/mipsel-linux-gcc
+	CPP = $(TOOLCHAIN)/bin/mipsel-linux-gcc
+	LD = $(TOOLCHAIN)/bin/mipsel-linux-gcc
 endif
 
 MD = @mkdir
@@ -70,16 +77,26 @@ F_OPTS = -fpermissive -falign-functions -falign-loops -falign-labels -falign-jum
 	-ftree-vectorize -fweb -frename-registers
 
 ifeq "$(OSTYPE)" "gcw0"	
-CFLAGS = -D_GCW0_ -G0 -O3 -Isrc -Isrc/$(MAMEOS) -Isrc/zlib $(W_OPTS) $(F_OPTS)
-# Add specific RG350 CPU optimizations
-CFLAGS += -march=mips32r2 -mtune=mips32r2
-# Activate triple buffering
-CFLAGS += -DSDL_TRIPLEBUF
-# If set, will skip game informations
-CFLAGS += -DSKIPMAMEWARNINGS
+	CFLAGS = -D_GCW0_ -G0 -Isrc -Isrc/$(MAMEOS) -Isrc/zlib $(W_OPTS) $(F_OPTS)
+	# Activate triple buffering
+	CFLAGS += -DSDL_TRIPLEBUF
+	# If set, will skip game informations
+	CFLAGS += -DSKIPMAMEWARNINGS
+	# Add specific RG350 CPU optimizations
+	CFLAGS += -Ofast -fdata-sections -ffunction-sections -mno-fp-exceptions -mno-check-zero-division -fsingle-precision-constant -fno-common -march=mips32r2 -mtune=mips32r2 -flto -mno-shared -mplt
+	CFLAGS += -Wno-narrowing
+	# RG350 - PGO (optional, 2 steps)
+	# STEP 1 : create profile files
+	ifeq ("${OD_PROFILE}","1")
+		CFLAGS  += -fprofile-generate=/media/data/local/home/PGO
+	endif
+	# STEP 2 : use profile files
+	ifeq ("${OD_PROFILE}","2")
+		CFLAGS  += -fprofile-use -fprofile-dir=./PGO
+	endif
 else
-CFLAGS = -D_GCW0_ -G0 -O3 -march=mips32 -mtune=mips32 -Isrc -Isrc/$(MAMEOS) -Isrc/zlib -msoft-float --mbranch-likely -mno-mips16 $(W_OPTS) $(F_OPTS)
-CFLAGS += -DSDL_TRIPLEBUF
+	CFLAGS = -D_GCW0_ -G0 -O3 -march=mips32 -mtune=mips32 -Isrc -Isrc/$(MAMEOS) -Isrc/zlib -msoft-float --mbranch-likely -mno-mips16 $(W_OPTS) $(F_OPTS)
+	CFLAGS += -DSDL_TRIPLEBUF
 endif
 #CFLAGS += -g
 
@@ -88,6 +105,26 @@ LIB_PATH  = $(TOOLCHAIN)/lib
 LIBS      = -lSDL  -lpthread -lm -lgcc 
 LDFLAGS = $(CFLAGS) -L$(LIB_PATH) $(LIBS) -s
 #LDFLAGS = -Wl,--gc-sections -Wl,-s
+
+ifeq ("${target}","gcw0")
+	LDFLAGS += -Wl,--as-needed -Wl,--gc-sections -flto -s
+	ifdef OD_BETA
+		# Add specific RG350 CPU optimizations (BETA FIRMWARE)
+		LDFLAGS += -Wl,-zcommon-page-size=2097152 -Wl,-zmax-page-size=2097152 -lhugetlbfs
+	endif
+	# RG350 - PGO (optional, 2 steps)
+	# STEP 1 : create profile files
+	ifeq ("${OD_PROFILE}","1")
+		LDFLAGS += -lgcov 
+		# Already in CFLAGS
+		# LDFLAGS += -fprofile-generate=/media/data/local/home/PGO
+	endif
+	# STEP 2 : use profile files
+	ifeq ("${OD_PROFILE}","2")
+		LDFLAGS += -fprofile-use -fprofile-dir=./PGO
+	endif
+endif
+
 endif
 
 OBJ = obj_$(TARGET)_$(MAMEOS)
@@ -109,11 +146,17 @@ CDEFS = $(DEFS) $(COREDEFS) $(CPUDEFS) $(SOUNDDEFS)
 
 $(EMULATOR): $(COREOBJS) $(OSOBJS) $(DRVOBJS)
 	$(LD) $(LDFLAGS) $(COREOBJS) $(OSOBJS) $(LIBS) $(DRVOBJS) -o $@
+	@if [ "${OD_BETA}" = "1" ]; then\
+        $(HUGEEDIT) --text --data $(EMULATOR);\
+    fi
 	$(MV) $(EMULATOR) distrib/mame4all/$(EMULATOR)
 
 $(EMULATOR).dge: $(FEOBJS)
 	@echo Linking $@ ...
 	$(LD) $(LDFLAGS) $(FEOBJS) $(LIBS) -o $@
+	@if [ "${OD_BETA}" = "1" ]; then\
+        $(HUGEEDIT) --text --data $(EMULATOR).dge;\
+    fi
 ifeq "$(OSTYPE)" "msys"
 	$(MV) $(EMULATOR).dge distrib/mame4all/$(EMULATOR).dge.exe
 else
