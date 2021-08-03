@@ -2,6 +2,7 @@
 #OSTYPE=msys
 #OSTYPE=oda320
 OSTYPE=gcw0
+OSVARIANT=
 
 ifeq ($(TARGET),)
 TARGET = mame
@@ -29,7 +30,11 @@ LD          = $(TOOLCHAIN)/bin/gcc
 else
 
 ifeq "$(OSTYPE)" "gcw0"	
+ifeq "$(OSVARIANT)" "lepus"
+TOOLCHAIN = /opt/lepus-toolchain/usr
+else
 TOOLCHAIN = /opt/gcw0-toolchain/usr
+endif
 else
 TOOLCHAIN = /opt/opendingux-toolchain/usr
 endif
@@ -69,10 +74,16 @@ F_OPTS = -fpermissive -falign-functions -falign-loops -falign-labels -falign-jum
 	-finline -finline-functions -fmerge-all-constants \
 	-ftree-vectorize -fweb -frename-registers
 
+W_OPTS += -Wno-narrowing
+
 ifeq "$(OSTYPE)" "gcw0"	
 CFLAGS = -D_GCW0_ -G0 -O3 -Isrc -Isrc/$(MAMEOS) -Isrc/zlib $(W_OPTS) $(F_OPTS)
 # Add specific RG350 CPU optimizations
+ifeq "$(OSVARIANT)" "lepus"
+CFLAGS += -march=mips32 -mtune=mips32
+else
 CFLAGS += -march=mips32r2 -mtune=mips32r2
+endif
 # Activate triple buffering
 CFLAGS += -DSDL_TRIPLEBUF
 # If set, will skip game informations
