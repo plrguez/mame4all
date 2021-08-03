@@ -270,10 +270,13 @@ void odx_sound_thread_stop(void)
 {
 	SDL_PauseAudio(1);
 
-	SDL_DestroyMutex(sndlock);
-	SDL_CloseAudio();
-	SDL_QuitSubSystem(SDL_INIT_AUDIO);
+	if (sndlock) {
+	    SDL_DestroyMutex(sndlock);
+	    sndlock = NULL;
+	}
 
+//	SDL_CloseAudio();
+//	SDL_QuitSubSystem(SDL_INIT_AUDIO);
 	if( odx_audio_spec.userdata ) {
 		free( odx_audio_spec.userdata );
 		odx_audio_spec.userdata = NULL;
@@ -350,15 +353,19 @@ void odx_deinit(void)
 {
 	SDL_PauseAudio(1);
 
-	SDL_DestroyMutex(sndlock);
-	SDL_CloseAudio();
+	if (sndlock) {
+	    SDL_DestroyMutex(sndlock);
+	    sndlock = NULL;
+	}
+//	SDL_CloseAudio();
 
 	//if (layer) SDL_FreeSurface(layer);
 	//layer=NULL;
 	if (video) SDL_FreeSurface(video);
 	video=NULL;
 
-	SDL_QuitSubSystem(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_JOYSTICK);
+//	SDL_QuitSubSystem(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_JOYSTICK);
+	SDL_QuitSubSystem(SDL_INIT_VIDEO|SDL_INIT_JOYSTICK);
 }
 
 void odx_set_clock(int mhz)

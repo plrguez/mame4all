@@ -816,7 +816,7 @@ void execute_game (char *playemu, char *playgame, int restart)
 	args[n]=romdir;n++;
 	
 	/* Restart UI is started from the UI */
-	if (restart == 1) args[n]="-restart"; n++;
+	if (restart == 1) { args[n]="-restart"; n++; }
 
 	args[n]=NULL;
 
@@ -1015,16 +1015,17 @@ signed int get_romdir(char *result) {
 
 void gethomedir(char *dir, char* name) {
 	char text[512];
+        char homedir[512];
 #ifdef _GCW0_
-	strcpy(dir, getenv("HOME"));
-	if (strlen(dir) == 0) {
-		getcwd(dir, 256);
+	strcpy(homedir, getenv("HOME"));
+	if (strlen(homedir) == 0) {
+		getcwd(homedir, 256);
 	}
 #else
 	getcwd(dir, 256);
 #endif
 	if (strlen(name)) {
-		sprintf(dir,"%s/.%s/",dir, name);
+		sprintf(dir,"%s/.%s/",homedir, name);
 #ifdef _GCW0_
 		mkdir(dir,S_IRWXU | S_IRWXG | S_IRWXO); // create $HOME/.program if it doesn't exist
 		sprintf(text,"%s/frontend/",dir); mkdir(text,S_IRWXU | S_IRWXG | S_IRWXO); 
