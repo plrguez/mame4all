@@ -94,6 +94,14 @@ unsigned int odx_joystick_read()
 	if (keystates[SDLK_BACKSPACE] == SDL_PRESSED)  { res |=  OD_R;  }  // BUTTON R
 	if (keystates[SDLK_TAB] == SDL_PRESSED)  { res |=  OD_L;  }  // BUTTON L
 
+#ifdef _GCW0_	
+	if (keystates[SDLK_PAGEDOWN] == SDL_PRESSED)  { res |=  OD_R2;  }  // BUTTON R2
+	if (keystates[SDLK_PAGEUP] == SDL_PRESSED)  { res |=  OD_L2;  }  // BUTTON L2
+	
+	if (keystates[SDLK_KP_PERIOD] == SDL_PRESSED)  { res |=  OD_R3;  }  // BUTTON R3
+	if (keystates[SDLK_KP_DIVIDE] == SDL_PRESSED)  { res |=  OD_L3;  }  // BUTTON L3
+#endif
+	
 	if ( (keystates[SDLK_RETURN] == SDL_PRESSED) )  { res |=  OD_START;  } // START
 	if ( (keystates[SDLK_ESCAPE] == SDL_PRESSED) ) { res |=  OD_SELECT; } // SELECT
 
@@ -118,10 +126,10 @@ unsigned int odx_joystick_read()
 			// use right stick if rotated (rol)
 			axis_x = SDL_JoystickGetAxis(odx_joyanalog, 3)/256;
 			axis_y = SDL_JoystickGetAxis(odx_joyanalog, 2)/256;
-			if (axis_y < -32) res |= OD_RIGHT;
-			if (axis_y >  32) res |= OD_LEFT;
-			if (axis_x < -32) res |= OD_DOWN;
-			if (axis_x >  32) res |= OD_UP;
+			if (axis_y < -32) res |= OD_LEFT;
+			if (axis_y >  32) res |= OD_RIGHT;
+			if (axis_x < -32) res |= OD_UP;
+			if (axis_x >  32) res |= OD_DOWN;
 		}
 		
 		if (SDL_JoystickGetButton(odx_joyanalog,0)) { res |=  OD_A;  }  // BUTTON A

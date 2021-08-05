@@ -158,7 +158,7 @@ static void updatekeyboard(void)
 	key[KEY_ENTER]=(ExKey1 & OD_B);
 	/* Esc */
 	#ifdef _GCW0_
-	key[KEY_ESC]=(ExKey1 & OD_POWER);
+	key[KEY_ESC]=(ExKey1 & OD_POWER)||(ExKey1 & OD_L2);
 	#else
 	key[KEY_ESC]=((ExKey1 & OD_L) && (ExKey1 & OD_R) && (ExKey1 & OD_START));
 	#endif
@@ -434,8 +434,8 @@ static int is_joy_axis_pressed (int axis, int dir, int ExKey)
 		{
 			switch (dir)
 			{
-				case 1: return ExKey & OD_UP; break;
-				case 2: return ExKey & OD_DOWN; break;
+				case 1: return ExKey & OD_DOWN; break;
+				case 2: return ExKey & OD_UP; break;
 				default: return 0; break;
 			}
 		}
@@ -443,8 +443,8 @@ static int is_joy_axis_pressed (int axis, int dir, int ExKey)
 		{
 			switch (dir)
 			{
-				case 1: return ExKey & OD_RIGHT; break;
-				case 2: return ExKey & OD_LEFT; break;
+				case 1: return ExKey & OD_LEFT; break;
+				case 2: return ExKey & OD_RIGHT; break;
 				default: return 0; break;
 			}
 		}

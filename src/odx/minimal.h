@@ -40,7 +40,7 @@ enum  { OD_UP=1<<0,         OD_LEFT=1<<1,       OD_DOWN=1<<2,  OD_RIGHT=1<<3,
         OD_SEL_A=1<<16,       OD_SEL_B=1<<17,        OD_SEL_X=1<<18,    OD_SEL_Y=1<<19
 #ifdef _GCW0_
   /* Power button */
-        ,OD_POWER=1<<20
+        ,OD_POWER=1<<20,OD_L2=1<<21,OD_R2=1<<22,OD_L3=1<<23,OD_R3=1<<24
 #endif
 };
 
