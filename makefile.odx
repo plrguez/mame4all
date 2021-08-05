@@ -80,7 +80,7 @@ ifeq "$(OSTYPE)" "gcw0"
 CFLAGS = -D_GCW0_ -G0 -O3 -Isrc -Isrc/$(MAMEOS) -Isrc/zlib $(W_OPTS) $(F_OPTS)
 # Add specific RG350 CPU optimizations
 ifeq "$(OSVARIANT)" "lepus"
-CFLAGS += -march=mips32 -mtune=mips32
+CFLAGS += -D_OD_LEPUS_ -march=mips32 -mtune=mips32
 else
 CFLAGS += -march=mips32r2 -mtune=mips32r2
 endif
@@ -155,3 +155,7 @@ maketree: $(sort $(OBJDIRS))
 clean:
 	$(RM) -r $(OBJ)
 	$(RM) $(EMULATOR)
+
+cleandge:
+	$(RM) -r $(FEOBJS)
+	$(RM) $(EMULATOR).dge
