@@ -91,6 +91,8 @@ static int frameskip_counter;
 int video_scale=0;
 int video_border=0;
 int video_aspect=0;
+int keep_aspect=VIDEO_FULLSCREEN;
+int video_filter=VIDEO_FILTER_BICUBIC;
 
 /* Create a bitmap. Also calls osd_clearbitmap() to appropriately initialize */
 /* it to the background color. */
@@ -540,6 +542,35 @@ int osd_create_display(int width,int height,int depth,int fps,int attributes,int
     return 0;
 }
 
+static void prepare_video_display(int *width, int *height)
+{
+    char sharpness[3] = { "8" };
+    const char *aspect_ratio = "0";
+
+    /* Aspect Ratio */
+    switch (keep_aspect) {
+	case VIDEO_KEEP_ASPECT:
+	    aspect_ratio = "1";
+	    break;
+	case VIDEO_INTEGER_SCALING:
+	    aspect_ratio = "2";
+	    break;
+	case VIDEO_FULLSCREEN:
+	default:
+	    aspect_ratio = "0";
+	    break;
+    }
+    
+    setenv("SDL_VIDEO_KMSDRM_SCALING_MODE", aspect_ratio, 1);
+
+    /* Video filter */
+    sprintf(sharpness,"%d",video_filter);
+    setenv("SDL_VIDEO_KMSDRM_SCALING_SHARPNESS", sharpness, 1);
+
+    *width  = (*width == 320  || video_scale == SCALE_HARDWARE) ? *width : ODX_SCREEN_WIDTH;
+    *height = (*height == 240 || video_scale == SCALE_HARDWARE) ? *height : ODX_SCREEN_HEIGHT;
+}
+
 /* set the actual display screen but don't allocate the screen bitmap */
 int osd_set_display(int width,int height,int depth,int attributes,int orientation)
 {
@@ -571,8 +602,9 @@ int osd_set_display(int width,int height,int depth,int attributes,int orientatio
 	}
 
 	/* Set video mode */
-	int m_width  = (width == 320  || video_scale == SCALE_HARDWARE) ? gfx_width : ODX_SCREEN_WIDTH;
-	int m_height = (height == 240 || video_scale == SCALE_HARDWARE) ? gfx_height : ODX_SCREEN_HEIGHT;
+	int m_width = gfx_width, m_height=gfx_height;
+	prepare_video_display(&m_width,&m_height);
+
 	odx_set_video_mode(depth,m_width,m_height);
 
 	vsync_frame_rate = video_fps;

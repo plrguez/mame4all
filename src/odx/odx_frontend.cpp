@@ -33,6 +33,9 @@ int odx_freq=336;       /* default dingoo Mhz */
 int odx_video_depth=16; /* MAME video depth */
 int odx_video_aspect=SCALE_BEST; /* Scale best*/
 int odx_rotation_direction=ROTATE_LEFT;
+int odx_keep_aspect=VIDEO_FULLSCREEN;
+int odx_video_filter=VIDEO_FILTER_BICUBIC;
+int odx_bicubic_level=8;
 int odx_flip_x=FLIP_OFF;
 int odx_flip_y=FLIP_OFF;
 int odx_video_sync=0;   /* No vsync */
@@ -282,9 +285,9 @@ static int load_game_config(char *game)
 	sprintf(text,"%s/frontend/%s.cfg",mamedir,game);
 	f=fopen(text,"r");
 	if (f) {
-		fscanf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",&odx_freq,&odx_video_depth,&odx_video_aspect,&odx_video_sync,
+		fscanf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",&odx_freq,&odx_video_depth,&odx_video_aspect,&odx_video_sync,
 		&odx_frameskip,&odx_sound,&odx_clock_cpu,&odx_clock_sound,&odx_cpu_cores,&odx_ramtweaks,&i,&odx_cheat,&odx_gsensor,
-		&odx_rotation_direction,&odx_flip_x,&odx_flip_y);
+		&odx_rotation_direction,&odx_flip_x,&odx_flip_y,&odx_keep_aspect,&odx_video_filter,&odx_bicubic_level);
 		fclose(f);
 		return 0;
 	}
@@ -318,7 +321,7 @@ static int show_options(char *game)
 		odx_gamelist_text_out( 4, 30,"Game Options");
 		odx_gamelist_text_out( 4, 230,"A=Select Game/Start  B=Back");
 		odx_gamelist_text_out( 268, 230,"L+R=Exit");
-		odx_gamelist_text_out( 244,2,build_version);
+		odx_gamelist_text_out( 196,2,build_version);
 
 		/* Draw the options */
 		strncpy (text,game_list_description(last_game_selected),33);
@@ -350,6 +353,40 @@ static int show_options(char *game)
 			case ROTATE_SCALE_HALFSIZE:   odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Halfsize"); break;
 		        case SCALE_HARDWARE:          odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Hardware"); break;
 			case ROTATE_SCALE_HARDWARE:   odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Scale Hardware"); break;
+		}
+		
+		/* Keep aspect */
+		y_Pos += 10;
+		if (odx_video_aspect==SCALE_HARDWARE || odx_video_aspect==ROTATE_SCALE_HARDWARE) {
+			switch (odx_keep_aspect)
+			{
+				case VIDEO_FULLSCREEN:       odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Aspect ratio   Full screen"); break;
+				case VIDEO_KEEP_ASPECT:      odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Aspect ratio   Keep aspect"); break;
+				case VIDEO_INTEGER_SCALING:  odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Aspect ratio   Integer scaling"); break;
+			}
+		} else {
+			odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Aspect ratio   ----");
+		}
+
+		/* Video filter */
+		y_Pos += 10;
+		if (odx_video_aspect==SCALE_HARDWARE || odx_video_aspect==ROTATE_SCALE_HARDWARE) {
+			switch (odx_video_filter)
+			{
+				case VIDEO_FILTER_BICUBIC:   odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video filter   Bicubic"); break;
+				case VIDEO_FILTER_BILINEAR:  odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video filter   Bilinear"); break;
+				case VIDEO_FILTER_NEAREST:   odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video filter   Nearest"); break;
+			}
+		} else {
+			odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video filter   ----");
+		}
+		
+		/* Bicubic level */
+		y_Pos += 10;
+		if ( (odx_video_aspect==SCALE_HARDWARE || odx_video_aspect==ROTATE_SCALE_HARDWARE) && odx_video_filter == VIDEO_FILTER_BICUBIC) {
+			odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Bicubic level  %d",odx_bicubic_level);
+		} else {
+			odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Bicubic level  ----");
 		}
 		
 		/* Rotation direction */
@@ -490,6 +527,55 @@ static int show_options(char *game)
 						odx_video_aspect=SCALE_END;
 				}
 				break;
+			case GO_KEEP_ASPECT:
+				if (odx_video_aspect==ROTATE_SCALE_HARDWARE || odx_video_aspect==SCALE_HARDWARE) {
+				    if(ExKey & OD_RIGHT)
+				    {
+					    odx_keep_aspect++;
+					    if (odx_keep_aspect>VIDEO_INTEGER_SCALING)
+						    odx_keep_aspect=VIDEO_FULLSCREEN;
+				    }
+				    else
+				    {
+					    odx_keep_aspect--;
+					    if (odx_keep_aspect<VIDEO_FULLSCREEN)
+						    odx_keep_aspect=VIDEO_INTEGER_SCALING;
+				    }
+				}
+				break;
+			case GO_VIDEO_FILTER:
+				if (odx_video_aspect==ROTATE_SCALE_HARDWARE || odx_video_aspect==SCALE_HARDWARE) {
+				    if(ExKey & OD_RIGHT)
+				    {
+					    odx_video_filter++;
+					    if (odx_video_filter>VIDEO_FILTER_NEAREST)
+						    odx_video_filter=VIDEO_FILTER_BICUBIC;
+				    }
+				    else
+				    {
+					    odx_video_filter--;
+					    if (odx_video_filter<VIDEO_FILTER_BICUBIC)
+						    odx_video_filter=VIDEO_FILTER_NEAREST;
+				    }
+				}
+				break;
+			case GO_BICUBIC_LEVEL:
+				if ( (odx_video_aspect==ROTATE_SCALE_HARDWARE || odx_video_aspect==SCALE_HARDWARE) &&
+				     odx_video_filter == VIDEO_FILTER_BICUBIC ) {
+				    if(ExKey & OD_RIGHT)
+				    {
+					    odx_bicubic_level++;
+					    if (odx_bicubic_level>32)
+						    odx_bicubic_level=2;
+				    }
+				    else
+				    {
+					    odx_bicubic_level--;
+					    if (odx_bicubic_level<2)
+						    odx_bicubic_level=32;
+				    }
+				}
+				break;
 			case GO_VIDEO_ROTATION:
 				if (odx_video_aspect>=ROTATE && odx_video_aspect<=ROTATE_SCALE_HARDWARE) {
 				    if(ExKey & OD_RIGHT)
@@ -613,9 +699,9 @@ static int show_options(char *game)
 			sprintf(text,"%s/frontend/%s.cfg",mamedir,game);
 			f=fopen(text,"w");
 			if (f) {
-				fprintf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",odx_freq,odx_video_depth,odx_video_aspect,odx_video_sync,
+				fprintf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",odx_freq,odx_video_depth,odx_video_aspect,odx_video_sync,
 				odx_frameskip,odx_sound,odx_clock_cpu,odx_clock_sound,odx_cpu_cores,odx_ramtweaks,i,odx_cheat,odx_gsensor,
-				odx_rotation_direction,odx_flip_x,odx_flip_y);
+				odx_rotation_direction,odx_flip_x,odx_flip_y,odx_keep_aspect,odx_video_filter,odx_bicubic_level);
 				fclose(f);
 				/* sync(); */
 			}
@@ -648,9 +734,9 @@ void odx_load_config(void) {
 
 	f=fopen(curCfg,"r");
 	if (f) {
-		fscanf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%d,%d,%d",&odx_freq,&odx_video_depth,&odx_video_aspect,&odx_video_sync,
+		fscanf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%d,%d,%d,%d,%d,%d",&odx_freq,&odx_video_depth,&odx_video_aspect,&odx_video_sync,
 		&odx_frameskip,&odx_sound,&odx_clock_cpu,&odx_clock_sound,&odx_cpu_cores,&odx_ramtweaks,&last_game_selected,&odx_cheat,romdir,
-		&odx_rotation_direction,&odx_flip_x,&odx_flip_y);
+		&odx_rotation_direction,&odx_flip_x,&odx_flip_y,&odx_keep_aspect,&odx_video_filter,&odx_bicubic_level);
 		fclose(f);
 	}
 }
@@ -663,9 +749,9 @@ void odx_save_config(void) {
 	sprintf(curCfg,"%s/frontend/mame.cfg",mamedir);
 	f=fopen(curCfg,"w");
 	if (f) {
-		fprintf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s ,%d,%d,%d",odx_freq,odx_video_depth,odx_video_aspect,odx_video_sync,
+		fprintf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s ,%d,%d,%d,%d,%d,%d",odx_freq,odx_video_depth,odx_video_aspect,odx_video_sync,
 		odx_frameskip,odx_sound,odx_clock_cpu,odx_clock_sound,odx_cpu_cores,odx_ramtweaks,last_game_selected,odx_cheat,romdir,
-		odx_rotation_direction,odx_flip_x,odx_flip_y);
+		odx_rotation_direction,odx_flip_x,odx_flip_y,odx_keep_aspect,odx_video_filter,odx_bicubic_level);
 		fclose(f);
 		/* sync(); */
 	}
@@ -767,6 +853,19 @@ void execute_game (char *playemu, char *playgame, int restart)
 	{
 		args[n]="-hardwarescale"; n++;
 		args[n]="-nodirty"; n++;
+		
+		args[n]="-od_keep_aspect"; n++;
+		sprintf(str[i],"%d",odx_keep_aspect);
+		args[n]=str[i]; i++;
+		n++;
+		
+		args[n]="-od_video_filter"; n++;
+		if (odx_video_filter==VIDEO_FILTER_BICUBIC)
+		    sprintf(str[i],"%d",odx_bicubic_level);
+		else
+		    sprintf(str[i],"%d",odx_video_filter);
+		args[n]=str[i]; i++;
+		n++;
 	}
 	if ((odx_video_aspect>=ROTATE) && (odx_video_aspect<=ROTATE_SCALE_HARDWARE))
 	{
@@ -1029,7 +1128,7 @@ signed int get_romdir(char *result) {
 			odx_gamelist_text_out( 4, 215,current_dir_short );
 			odx_gamelist_text_out( 4, 230,"A=Enter dir START=Select dir");
 			odx_gamelist_text_out( 280, 230,"B=Quit");
-			odx_gamelist_text_out( 244,2,build_version);
+			odx_gamelist_text_out( 196,2,build_version);
 			
 			for(i = 0, current_filedir_number = i + current_filedir_scroll_value; i < FILE_LIST_ROWS; i++, current_filedir_number++) {
 #define CHARLEN ((320/6)-2)

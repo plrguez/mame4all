@@ -75,9 +75,24 @@ enum e_flip_xy {
     FLIP_ON,
 };
 
+enum e_keep_aspect {
+    VIDEO_FULLSCREEN,
+    VIDEO_KEEP_ASPECT,
+    VIDEO_INTEGER_SCALING,
+};
+
+enum e_video_filter {
+    VIDEO_FILTER_BICUBIC,
+    VIDEO_FILTER_BILINEAR,
+    VIDEO_FILTER_NEAREST,
+};
+
 enum e_game_options {
     GO_VIDEO_DEPTH,
     GO_VIDEO_ASPECT,
+    GO_KEEP_ASPECT,
+    GO_VIDEO_FILTER,
+    GO_BICUBIC_LEVEL,
     GO_VIDEO_ROTATION,
     GO_FLIP_X,
     GO_FLIP_Y,

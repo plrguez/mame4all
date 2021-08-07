@@ -90,6 +90,8 @@ int main (int argc, char **argv)
    	extern int video_scale;
 	extern int video_border;
 	extern int video_aspect;
+	extern int keep_aspect;
+	extern int video_filter;
 	extern int throttle;
 
 	memset(&options,0,sizeof(options));
@@ -115,6 +117,10 @@ int main (int argc, char **argv)
 			video_scale=SCALE_FAST;
 		if (strcasecmp(argv[i],"-hardwarescale") == 0)
 			video_scale=SCALE_HARDWARE;
+		if ((strcasecmp(argv[i],"-od_keep_aspect") == 0) && (i<argc-1))
+			keep_aspect=atoi(argv[i+1]);
+		if ((strcasecmp(argv[i],"-od_video_filter") == 0) && (i<argc-1))
+			video_filter=atoi(argv[i+1]);
 		if (strcasecmp(argv[i],"-border") == 0)
 			video_border=1;
 		if (strcasecmp(argv[i],"-aspect") == 0)
