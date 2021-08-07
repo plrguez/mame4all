@@ -384,12 +384,13 @@ const struct JoystickInfo *osd_get_joy_list(void)
 
 static int is_joy_button_pressed (int button, int ExKey)
 {
+	extern int rotate_controls, ror;
 	switch (button)
 	{
-		case 0: return ExKey & OD_B; break;
-		case 1: return ExKey & OD_A; break;
-		case 2: return ExKey & OD_Y; break;
-		case 3: return ExKey & OD_X; break;
+		case 0: return ExKey & ( !rotate_controls ? OD_B : ( ror ? OD_Y : OD_A ) ); break;
+		case 1: return ExKey & ( !rotate_controls ? OD_A : ( ror ? OD_B : OD_X ) ); break;
+		case 2: return ExKey & ( !rotate_controls ? OD_Y : ( ror ? OD_X : OD_B) ); break;
+		case 3: return ExKey & ( !rotate_controls ? OD_X : ( ror ? OD_A : OD_Y ) ); break;
 		case 4: return ExKey & OD_L; break;
 		case 5: return ExKey & OD_R; break;
 		default: break;
