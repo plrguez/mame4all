@@ -27,8 +27,10 @@
 SDL_Event			event;
 unsigned char 			*keystates;
 
+bool				determine_device_scale=false;
+int				device_scale=1;
 SDL_Surface 			*video;
-//SDL_Surface 			*layer;
+SDL_Surface 			*layer;
 unsigned char			*od_screen8;
 unsigned short			*od_screen16;
 volatile unsigned short	odx_palette[512];
@@ -45,6 +47,7 @@ unsigned int			odx_vol = 100;
 unsigned int			odx_sound_rate=44100;
 int						odx_sound_stereo=1;
 int						rotate_controls=0;
+int						ror=0;
 unsigned char			odx_keys[OD_KEY_MAX];
 #ifdef _GCW0_
 SDL_Joystick			*odx_joyanalog;
@@ -58,17 +61,17 @@ signed int axis_x=0, axis_y=0;
 
 void odx_video_flip(void)
 {
-	//SDL_BlitSurface(layer,0,video,0);
+	SDL_BlitSurface(layer,0,video,0);
 	SDL_Flip(video);
-	od_screen16=(unsigned short *) video->pixels;
+	od_screen16=(unsigned short *) layer->pixels;
 	od_screen8=(unsigned char *) od_screen16;
 }
 
 void odx_video_flip_single(void)
 {
-	//SDL_BlitSurface(layer,0,video,0);
+	SDL_BlitSurface(layer,0,video,0);
 	SDL_Flip(video);
-	od_screen16=(unsigned short *) video->pixels;
+	od_screen16=(unsigned short *) layer->pixels;
 	od_screen8=(unsigned char *) od_screen16;
 }
 
@@ -122,7 +125,15 @@ unsigned int odx_joystick_read()
 			if (axis_y < -32) { res |=  OD_UP;  } // UP
 			if (axis_y > 32) { res |=  OD_DOWN;  } // DOWN
 		}
-		else {
+		else if (ror) {
+			// use left stick if rotated right (ror) - RG280M
+			axis_x = SDL_JoystickGetAxis(odx_joyanalog, 1)/256;
+			axis_y = SDL_JoystickGetAxis(odx_joyanalog, 0)/256;
+			if (axis_x < -32) res |=  OD_UP;
+			if (axis_x > 32)  res |=  OD_DOWN;
+			if (axis_y < -32) res |=  OD_LEFT;
+			if (axis_y > 32)  res |=  OD_RIGHT;
+		} else {
 			// use right stick if rotated (rol)
 			axis_x = SDL_JoystickGetAxis(odx_joyanalog, 3)/256;
 			axis_y = SDL_JoystickGetAxis(odx_joyanalog, 2)/256;
@@ -291,6 +302,27 @@ void odx_sound_thread_stop(void)
 	}
 }
 
+#ifdef _GCW0_
+int odx_is_kmsdrm_640480(void) {
+  char buf[20];
+
+  SDL_VideoDriverName(&buf[0], 20);
+  if (strcmp(&buf[0], "kmsdrm"))
+    return 0;
+
+  SDL_Rect **modes = SDL_ListModes(NULL, SDL_FULLSCREEN | SDL_HWSURFACE);
+  if (modes[0]->w!=640 || modes[0]->h!=480)
+    return 0;
+
+  return 1;
+}
+
+int odx_device_scale(bool determine=true)
+{
+    return (determine && odx_is_kmsdrm_640480()) ? 2 : 1;
+}
+#endif
+
 void odx_init(int ticks_per_second, int bpp, int rate, int bits, int stereo, int Hz)
 {
 	int i;
@@ -302,6 +334,9 @@ void odx_init(int ticks_per_second, int bpp, int rate, int bits, int stereo, int
 
 	/* General video & audio stuff */
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
+#ifdef _GCW0_
+	device_scale = odx_device_scale(determine_device_scale);
+#endif
 	video = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE |
 #ifdef SDL_TRIPLEBUF
 		SDL_TRIPLEBUF
@@ -367,8 +402,8 @@ void odx_deinit(void)
 	}
 //	SDL_CloseAudio();
 
-	//if (layer) SDL_FreeSurface(layer);
-	//layer=NULL;
+	if (layer) SDL_FreeSurface(layer);
+	layer=NULL;
 	if (video) SDL_FreeSurface(video);
 	video=NULL;
 
@@ -380,17 +415,42 @@ void odx_set_clock(int mhz)
 {
 
 }
+
+#ifdef _GCW0_
+void odx_set_video_mode_for_layer(int bpp,int width,int height)
+{
+    if (!video || width!=video->w || height!=video->h || bpp!=video->format->BitsPerPixel) {
+	if (video)
+	    SDL_FreeSurface(video);
+	video = SDL_SetVideoMode(width, height, 16, SDL_HWSURFACE |
+#ifdef SDL_TRIPLEBUF
+		SDL_TRIPLEBUF
+#else
+		SDL_DOUBLEBUF
+#endif
+	);
+    }
+    
+}
+#endif
  
 void odx_set_video_mode(int bpp,int width,int height)
 {
-	/*
+#ifdef _GCW0_
+    odx_set_video_mode_for_layer(bpp,width,height);
+#endif
+
 	if (layer != NULL) {
 		SDL_FreeSurface(layer);
 	}
 
     layer = SDL_CreateRGBSurface (video->flags,
-                                320,
-                                240,
+#ifdef _GCW0_
+                                width,
+                                height,
+#else
+				320,240,
+#endif
                                 16,
                                 video->format->Rmask,
                                 video->format->Gmask,
@@ -400,16 +460,15 @@ void odx_set_video_mode(int bpp,int width,int height)
 		fprintf(stderr, "Couldn't create surface: %s\n", SDL_GetError());
 		exit(1);
 	}
-	*/
 	odx_clear_video_multibuf();
 	
-	//od_screen16=(unsigned short *) layer->pixels;
-	od_screen16=(unsigned short *) video->pixels;
+	od_screen16=(unsigned short *) layer->pixels;
+//	od_screen16=(unsigned short *) video->pixels;
 	od_screen8=(unsigned char *) od_screen16;
 }
 
 void odx_clear_video() {
-	SDL_FillRect( video, NULL, 0 );
+	SDL_FillRect( layer, NULL, 0 );
 	odx_video_flip();
 }
 

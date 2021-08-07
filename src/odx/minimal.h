@@ -22,8 +22,10 @@
 
 #include <SDL/SDL.h>
 
-#define ODX_SCREEN_WIDTH 320
-#define ODX_SCREEN_HEIGHT 240
+extern bool determine_device_scale;
+extern int device_scale;
+#define ODX_SCREEN_WIDTH (320 * device_scale)
+#define ODX_SCREEN_HEIGHT (240 * device_scale)
 
 #define odx_video_color8(C,R,G,B)  (odx_palette_rgb[C] = ((((R)&0xF8)<<8)|(((G)&0xFC)<<3)|(((B)&0xF8)>>3)))
 #define odx_video_color16(R,G,B,A) ((((R)&0xF8)<<8)|(((G)&0xFC)<<3)|(((B)&0xF8)>>3))
@@ -46,8 +48,51 @@ enum  { OD_UP=1<<0,         OD_LEFT=1<<1,       OD_DOWN=1<<2,  OD_RIGHT=1<<3,
 
 #define OD_KEY_MAX 16
 
-//extern SDL_Surface 				*layer,*video;
-extern SDL_Surface 				*video;
+enum e_video_scaling {
+    SCALE_INIT=0,
+    SCALE_NORMAL=0,
+    SCALE_HORIZONTAL,
+    SCALE_BEST,
+    SCALE_FAST,
+    SCALE_HALFSIZE,
+    ROTATE,
+    ROTATE_SCALE_HORIZONTAL,
+    ROTATE_SCALE_BEST,
+    ROTATE_SCALE_FAST,
+    ROTATE_SCALE_HALFSIZE,
+    ROTATE_SCALE_HARDWARE,
+    SCALE_HARDWARE,
+    SCALE_END=SCALE_HARDWARE,
+};
+
+enum e_rotate_directions {
+    ROTATE_LEFT,
+    ROTATE_RIGHT,
+};
+
+enum e_flip_xy {
+    FLIP_OFF,
+    FLIP_ON,
+};
+
+enum e_game_options {
+    GO_VIDEO_DEPTH,
+    GO_VIDEO_ASPECT,
+    GO_VIDEO_ROTATION,
+    GO_FLIP_X,
+    GO_FLIP_Y,
+    GO_VIDEO_SYNC,
+    GO_FRAME_SKIP,
+    GO_SOUND,
+    GO_CPU_CLOCK,
+    GO_AUDIO_CLOCK,
+    GO_FAST_CORES,
+    GO_CHEATS,
+    GO_LAST,
+};
+
+extern SDL_Surface 				*layer,*video;
+//extern SDL_Surface 				*video;
 extern unsigned char			*od_screen8;
 extern unsigned short			*od_screen16;
 
@@ -82,10 +127,18 @@ extern void odx_sound_play(void *buff, int len);
 extern void odx_sound_thread_start(void);
 extern void odx_sound_thread_stop(void);
 
+#ifdef _GCW0_
+extern int odx_is_kmsdrm_640480(void);
+extern int odx_device_scale(bool determine);
+#endif
+
 extern void odx_init(int ticks_per_second, int bpp, int rate, int bits, int stereo, int Hz);
 extern void odx_deinit(void);
 
 extern void odx_set_clock(int mhz);
+#ifdef _GCW0_
+extern void odx_set_video_mode_for_layer(int bpp,int width,int height);
+#endif
 extern void odx_set_video_mode(int bpp,int width,int height);
 extern void odx_clear_video();
 extern void odx_clear_video_multibuf();

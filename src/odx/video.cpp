@@ -237,7 +237,36 @@ INLINE void swap_dirty(void)
 	dirty_new = tmp;
 }
 
+static signed int dir=-1;
+static Uint8 step=0;
+static int gcd_int(int a, int b)
+{
+    Uint16 tmp=0,save_a=a,save_b=b;
+    step++;
+    dir *= -1;
+    if (step > 62) {
+	return save_b;
+    } else {
+	while (a != 0) {
+	    tmp = a;
+	    a = b % a;
+	    b = tmp;
+	}
+	if (save_b/b > 31) {
+	    return gcd_int(save_a+step*dir,save_b);
+	} else {
+	    return save_a;
+	}
+    }
+}
 
+static int gcd(int a, int b)
+{
+    dir=-1;
+    step=0;
+    
+    return gcd_int(a,b);
+}
 
 /*
  * This function tries to find the best display mode.
@@ -249,15 +278,32 @@ static void select_display_mode(int width,int height,int depth,int attributes,in
 	{
 		logerror("Game needs %d-bit colors.\n",depth);
 	}
+	
+	// If device scale support > 320x240 but game < 320x240 then don't scale
+	if (video_scale != SCALE_HARDWARE && video_scale != ROTATE_SCALE_HARDWARE && device_scale == 2 && 
+	    width<=(ODX_SCREEN_WIDTH/device_scale) && height<=(ODX_SCREEN_HEIGHT/device_scale))
+	    device_scale=1;
 
 	if (!gfx_width && !gfx_height)
 	{
 		gfx_width = ODX_SCREEN_WIDTH;
 		gfx_height = ODX_SCREEN_HEIGHT;
 	}
+	
+	// Hardware scaling
+	if (video_scale == SCALE_HARDWARE || video_scale == ROTATE_SCALE_HARDWARE)
+	{
+	    gfx_width = width;
+	    gfx_height = height;
+	    
+	    // Take into account GCD for IPU Scaling.
+	    SDL_Rect **modes = SDL_ListModes(video->format,SDL_FULLSCREEN|SDL_HWSURFACE);
+	    gfx_width  = gcd(gfx_width,modes[0]->w);
+	    gfx_height = gcd(gfx_height,modes[0]->h);
+	}
 
 	/* Video scaling - Horizontal */
-	if (video_scale ==1)
+	if (video_scale == SCALE_HORIZONTAL)
 	{
 		if (width>ODX_SCREEN_WIDTH)
 		{
@@ -267,7 +313,7 @@ static void select_display_mode(int width,int height,int depth,int attributes,in
 			}
 			else
 			{
-				video_scale=0;
+				video_scale=SCALE_NORMAL;
 			}
 		}
 		else if (width<ODX_SCREEN_WIDTH)
@@ -278,17 +324,17 @@ static void select_display_mode(int width,int height,int depth,int attributes,in
 			}
 			else
 			{
-				video_scale=0;
+				video_scale=SCALE_NORMAL;
 			}
 		}
 		else
 		{
-			video_scale=0;
+			video_scale=SCALE_NORMAL;
 		}
 	}
 
 	/* Video scaling - Best Fit */
-	if (video_scale == 3 || video_scale == 4)
+	if (video_scale == SCALE_BEST || video_scale == SCALE_FAST)
 	{
 		iAddX = iModuloX = iAddY = iModuloY = 1;
 
@@ -331,7 +377,7 @@ static void select_display_mode(int width,int height,int depth,int attributes,in
 		}
 		else
 		{
-			video_scale = 0;
+			video_scale = SCALE_NORMAL;
 		}
 	}
 
@@ -344,7 +390,7 @@ static void select_display_mode(int width,int height,int depth,int attributes,in
 	}
 
 	/* vector games always use maximum resolution */
-	if (vector_game)
+	if (vector_game && !(video_scale == SCALE_HARDWARE || video_scale == ROTATE_SCALE_HARDWARE))
 	{
 		gfx_width = ODX_SCREEN_WIDTH;
 		gfx_height = ODX_SCREEN_HEIGHT;
@@ -359,6 +405,7 @@ void osd_set_visible_area(int min_x,int max_x,int min_y,int max_y)
 
 logerror("set visible area %d-%d %d-%d\n",min_x,max_x,min_y,max_y);
 
+	extern int device_scale;
 	viswidth  = max_x - min_x + 1;
 	visheight = max_y - min_y + 1;
 
@@ -366,31 +413,31 @@ logerror("set visible area %d-%d %d-%d\n",min_x,max_x,min_y,max_y);
 	xmultiply = 1;
 	ymultiply = 1;
 
-	if (video_scale == 2)
+	if (video_scale == SCALE_HALFSIZE)
 	{
 		gfx_display_lines = visheight;
 		gfx_display_columns = viswidth;
-		gfx_xoffset = ((gfx_width<<1) - viswidth * xmultiply) / 2;
-		gfx_yoffset = ((gfx_height<<1) - visheight * ymultiply) / 2;
+		gfx_xoffset = ((gfx_width<<1) - viswidth * xmultiply) / (2*device_scale);
+		gfx_yoffset = ((gfx_height<<1) - visheight * ymultiply) / (2*device_scale);
 	}
-	else if (video_scale == 3 || video_scale == 4)
+	else if (video_scale == SCALE_BEST || video_scale == SCALE_FAST)
 	{
 		gfx_display_lines = visheight;
 		gfx_display_columns = viswidth;
 
-		gfx_xoffset = (gfx_width - scaled_display_columns * xmultiply) / 2;
-		gfx_yoffset = (gfx_height - scaled_display_lines * ymultiply) / 2;
+		gfx_xoffset = (gfx_width - scaled_display_columns * xmultiply) / (2*device_scale);
+		gfx_yoffset = (gfx_height - scaled_display_lines * ymultiply) / (2*device_scale);
 	}
 	else
 	{
 		gfx_display_lines = visheight;
 		gfx_display_columns = viswidth;
 
-		gfx_xoffset = (gfx_width - viswidth * xmultiply) / 2;
+		gfx_xoffset = (gfx_width - viswidth * xmultiply) / (2*device_scale);
 		if (gfx_display_columns > gfx_width / xmultiply)
 			gfx_display_columns = gfx_width / xmultiply;
 
-		gfx_yoffset = (gfx_height - visheight * ymultiply) / 2;
+		gfx_yoffset = (gfx_height - visheight * ymultiply) / (2*device_scale);
 			if (gfx_display_lines > gfx_height / ymultiply)
 				gfx_display_lines = gfx_height / ymultiply;
 	}
@@ -524,7 +571,9 @@ int osd_set_display(int width,int height,int depth,int attributes,int orientatio
 	}
 
 	/* Set video mode */
-	odx_set_video_mode(depth,gfx_width,gfx_height);
+	int m_width  = (width == 320  || video_scale == SCALE_HARDWARE) ? gfx_width : ODX_SCREEN_WIDTH;
+	int m_height = (height == 240 || video_scale == SCALE_HARDWARE) ? gfx_height : ODX_SCREEN_HEIGHT;
+	odx_set_video_mode(depth,m_width,m_height);
 
 	vsync_frame_rate = video_fps;
 

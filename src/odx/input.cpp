@@ -404,7 +404,7 @@ static int is_joy_button_pressed (int button, int ExKey)
 
 static int is_joy_axis_pressed (int axis, int dir, int ExKey)
 {
-	extern int rotate_controls;
+	extern int rotate_controls, ror;
 	if (!rotate_controls)
 	{
 		/* Normal controls */
@@ -434,8 +434,8 @@ static int is_joy_axis_pressed (int axis, int dir, int ExKey)
 		{
 			switch (dir)
 			{
-				case 1: return ExKey & OD_DOWN; break;
-				case 2: return ExKey & OD_UP; break;
+				case 1: return ExKey & (ror ? OD_UP : OD_DOWN); break;
+				case 2: return ExKey & (ror ? OD_DOWN : OD_UP); break;
 				default: return 0; break;
 			}
 		}
@@ -443,8 +443,8 @@ static int is_joy_axis_pressed (int axis, int dir, int ExKey)
 		{
 			switch (dir)
 			{
-				case 1: return ExKey & OD_LEFT; break;
-				case 2: return ExKey & OD_RIGHT; break;
+				case 1: return ExKey & (ror ? OD_RIGHT : OD_LEFT); break;
+				case 2: return ExKey & (ror ? OD_LEFT : OD_RIGHT); break;
 				default: return 0; break;
 			}
 		}

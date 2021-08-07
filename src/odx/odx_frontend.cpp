@@ -31,7 +31,10 @@ char mamedir[512];
 
 int odx_freq=336;       /* default dingoo Mhz */ 
 int odx_video_depth=16; /* MAME video depth */
-int odx_video_aspect=2; /* Scale best*/
+int odx_video_aspect=SCALE_BEST; /* Scale best*/
+int odx_rotation_direction=ROTATE_LEFT;
+int odx_flip_x=FLIP_OFF;
+int odx_flip_y=FLIP_OFF;
 int odx_video_sync=0;   /* No vsync */
 int odx_frameskip=-1;
 int odx_sound = 2;
@@ -49,7 +52,7 @@ char romdir[512];
 
 static void blit_bmp_8bpp(unsigned char *out, unsigned char *in) 
 {
-//	SDL_FillRect( layer, NULL, 0 );
+	SDL_FillRect( layer, NULL, 0 );
 	SDL_RWops *rw = SDL_RWFromMem(in, BMP_SIZE);
 	SDL_Surface *temp = SDL_LoadBMP_RW(rw, 1);
 	SDL_Surface *image;
@@ -57,8 +60,8 @@ static void blit_bmp_8bpp(unsigned char *out, unsigned char *in)
 	SDL_FreeSurface(temp);
 	
 	// Display image
- 	//SDL_BlitSurface(image, 0, layer, 0);
-	SDL_BlitSurface(image, 0, video, 0);
+ 	SDL_BlitSurface(image, 0, layer, 0);
+//	SDL_BlitSurface(image, 0, video, 0);
 	SDL_FreeSurface(image);
 }
 
@@ -279,8 +282,9 @@ static int load_game_config(char *game)
 	sprintf(text,"%s/frontend/%s.cfg",mamedir,game);
 	f=fopen(text,"r");
 	if (f) {
-		fscanf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",&odx_freq,&odx_video_depth,&odx_video_aspect,&odx_video_sync,
-		&odx_frameskip,&odx_sound,&odx_clock_cpu,&odx_clock_sound,&odx_cpu_cores,&odx_ramtweaks,&i,&odx_cheat,&odx_gsensor);
+		fscanf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",&odx_freq,&odx_video_depth,&odx_video_aspect,&odx_video_sync,
+		&odx_frameskip,&odx_sound,&odx_clock_cpu,&odx_clock_sound,&odx_cpu_cores,&odx_ramtweaks,&i,&odx_cheat,&odx_gsensor,
+		&odx_rotation_direction,&odx_flip_x,&odx_flip_y);
 		fclose(f);
 		return 0;
 	}
@@ -295,7 +299,7 @@ static int show_options(char *game)
 	int x_Pos = 41;
 	int y_PosTop = 58;
 	int y_Pos = y_PosTop;
-	int options_count = 9;
+	int options_count = GO_LAST;
 	char text[512];
 	FILE *f;
 	int i=0;
@@ -334,16 +338,47 @@ static int show_options(char *game)
 		y_Pos += 10;
 		switch (odx_video_aspect)
 		{
-			case 0: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Normal"); break;
-			case 1: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Horizontal"); break;
-			case 2: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Best"); break;
-			case 3: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Fast"); break;
-			case 4: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Halfsize"); break;
-			case 5: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Normal"); break;
-			case 6: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Scale Horiz"); break;
-			case 7: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Best"); break;
-			case 8: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Fast"); break;
-			case 9: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Halfsize"); break;
+			case SCALE_NORMAL:            odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Normal"); break;
+			case SCALE_HORIZONTAL:        odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Horizontal"); break;
+			case SCALE_BEST:              odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Best"); break;
+			case SCALE_FAST:              odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Fast"); break;
+			case SCALE_HALFSIZE:          odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Halfsize"); break;
+			case ROTATE:                  odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Normal"); break;
+			case ROTATE_SCALE_HORIZONTAL: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Scale Horiz"); break;
+			case ROTATE_SCALE_BEST:       odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Best"); break;
+			case ROTATE_SCALE_FAST:       odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Fast"); break;
+			case ROTATE_SCALE_HALFSIZE:   odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Halfsize"); break;
+		        case SCALE_HARDWARE:          odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Hardware"); break;
+			case ROTATE_SCALE_HARDWARE:   odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Scale Hardware"); break;
+		}
+		
+		/* Rotation direction */
+		y_Pos += 10;
+		if (odx_video_aspect>=ROTATE && odx_video_aspect<=ROTATE_SCALE_HARDWARE) {
+			switch (odx_rotation_direction)
+			{
+				case ROTATE_LEFT:             odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Rotate         Left"); break;
+				case ROTATE_RIGHT:            odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Rotate         Right"); break;
+			}
+		} else {
+			odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Rotate         ----");
+		}
+		
+		
+		/* Flip X */
+		y_Pos += 10;
+		switch (odx_flip_x)
+		{
+			case FLIP_ON:                 odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Flip X         On"); break;
+			case FLIP_OFF:                odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Flip X         Off"); break;
+		}
+		
+		/* Flip Y */
+		y_Pos += 10;
+		switch (odx_flip_y)
+		{
+			case FLIP_ON:                 odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Flip Y         On"); break;
+			case FLIP_OFF:                odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Flip Y         Off"); break;
 		}
 		
 		/* (2) Video Sync */
@@ -433,7 +468,7 @@ static int show_options(char *game)
 		else if(ExKey & OD_LEFT || ExKey & OD_RIGHT)
 		{
 			switch(selected_option) {
-			case 0:
+			case GO_VIDEO_DEPTH:
 				switch (odx_video_depth)
 				{
 					case -1: odx_video_depth=8; break;
@@ -441,26 +476,72 @@ static int show_options(char *game)
 					case 16: odx_video_depth=-1; break;
 				}
 				break;
-			case 1:
+			case GO_VIDEO_ASPECT:
 				if(ExKey & OD_RIGHT)
 				{
 					odx_video_aspect++;
-					if (odx_video_aspect>9)
-						odx_video_aspect=0;
+					if (odx_video_aspect>SCALE_END)
+						odx_video_aspect=SCALE_INIT;
 				}
 				else
 				{
 					odx_video_aspect--;
-					if (odx_video_aspect<0)
-						odx_video_aspect=9;
+					if (odx_video_aspect<SCALE_INIT)
+						odx_video_aspect=SCALE_END;
 				}
 				break;
-			case 2:
+			case GO_VIDEO_ROTATION:
+				if (odx_video_aspect>=ROTATE && odx_video_aspect<=ROTATE_SCALE_HARDWARE) {
+				    if(ExKey & OD_RIGHT)
+				    {
+					    odx_rotation_direction++;
+					    if (odx_rotation_direction>=ROTATE_RIGHT)
+						    odx_rotation_direction=ROTATE_LEFT;
+				    }
+				    else
+				    {
+					    odx_rotation_direction--;
+					    if (odx_rotation_direction<=ROTATE_LEFT)
+						    odx_rotation_direction=ROTATE_RIGHT;
+				    }
+				    break;
+				} else {
+				    break;
+				}
+			case GO_FLIP_X:
+				if(ExKey & OD_RIGHT)
+				{
+					odx_flip_x++;
+					if (odx_flip_x>=FLIP_OFF)
+						odx_flip_x=FLIP_ON;
+				}
+				else
+				{
+					odx_flip_x--;
+					if (odx_flip_x<=FLIP_ON)
+						odx_flip_x=FLIP_OFF;
+				}
+				break;
+			case GO_FLIP_Y:
+				if(ExKey & OD_RIGHT)
+				{
+					odx_flip_y++;
+					if (odx_flip_y>=FLIP_OFF)
+						odx_flip_y=FLIP_ON;
+				}
+				else
+				{
+					odx_flip_y--;
+					if (odx_flip_y<=FLIP_ON)
+						odx_flip_y=FLIP_OFF;
+				}
+				break;
+			case GO_VIDEO_SYNC:
 				odx_video_sync=odx_video_sync+1;
 				if (odx_video_sync>2)
 					odx_video_sync=-1;
 				break;
-			case 3:
+			case GO_FRAME_SKIP:
 				if(ExKey & OD_RIGHT)
 				{
 					odx_frameskip ++;
@@ -474,7 +555,7 @@ static int show_options(char *game)
 						odx_frameskip=11;
 				}
 				break;
-			case 4:
+			case GO_SOUND:
 				if(ExKey & OD_RIGHT)
 				{
 					odx_sound ++;
@@ -488,7 +569,7 @@ static int show_options(char *game)
 						odx_sound=15;
 				}
 				break;
-			case 5:
+			case GO_CPU_CLOCK:
 				/* "CPU Clock" */
 				if(ExKey & OD_RIGHT)
 				{
@@ -503,7 +584,7 @@ static int show_options(char *game)
 						odx_clock_cpu = 10;
 				}
 				break;
-			case 6:
+			case GO_AUDIO_CLOCK:
 				/* "Audio Clock" */
 				if(ExKey & OD_RIGHT)
 				{
@@ -517,10 +598,10 @@ static int show_options(char *game)
 						odx_clock_sound = 10;
 				}
 				break;
-			case 7: /* change for fast cpu core */
+			case GO_FAST_CORES: /* change for fast cpu core */
 				odx_cpu_cores=(odx_cpu_cores+1)%2;
 				break;
-			case 8: /* Are we using cheats */
+			case GO_CHEATS: /* Are we using cheats */
 				odx_cheat=!odx_cheat;
 				break;
 			}
@@ -532,8 +613,9 @@ static int show_options(char *game)
 			sprintf(text,"%s/frontend/%s.cfg",mamedir,game);
 			f=fopen(text,"w");
 			if (f) {
-				fprintf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",odx_freq,odx_video_depth,odx_video_aspect,odx_video_sync,
-				odx_frameskip,odx_sound,odx_clock_cpu,odx_clock_sound,odx_cpu_cores,odx_ramtweaks,i,odx_cheat,odx_gsensor);
+				fprintf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",odx_freq,odx_video_depth,odx_video_aspect,odx_video_sync,
+				odx_frameskip,odx_sound,odx_clock_cpu,odx_clock_sound,odx_cpu_cores,odx_ramtweaks,i,odx_cheat,odx_gsensor,
+				odx_rotation_direction,odx_flip_x,odx_flip_y);
 				fclose(f);
 				/* sync(); */
 			}
@@ -566,8 +648,9 @@ void odx_load_config(void) {
 
 	f=fopen(curCfg,"r");
 	if (f) {
-		fscanf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s",&odx_freq,&odx_video_depth,&odx_video_aspect,&odx_video_sync,
-		&odx_frameskip,&odx_sound,&odx_clock_cpu,&odx_clock_sound,&odx_cpu_cores,&odx_ramtweaks,&last_game_selected,&odx_cheat,romdir);
+		fscanf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%d,%d,%d",&odx_freq,&odx_video_depth,&odx_video_aspect,&odx_video_sync,
+		&odx_frameskip,&odx_sound,&odx_clock_cpu,&odx_clock_sound,&odx_cpu_cores,&odx_ramtweaks,&last_game_selected,&odx_cheat,romdir,
+		&odx_rotation_direction,&odx_flip_x,&odx_flip_y);
 		fclose(f);
 	}
 }
@@ -580,8 +663,9 @@ void odx_save_config(void) {
 	sprintf(curCfg,"%s/frontend/mame.cfg",mamedir);
 	f=fopen(curCfg,"w");
 	if (f) {
-		fprintf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s",odx_freq,odx_video_depth,odx_video_aspect,odx_video_sync,
-		odx_frameskip,odx_sound,odx_clock_cpu,odx_clock_sound,odx_cpu_cores,odx_ramtweaks,last_game_selected,odx_cheat,romdir);
+		fprintf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s ,%d,%d,%d",odx_freq,odx_video_depth,odx_video_aspect,odx_video_sync,
+		odx_frameskip,odx_sound,odx_clock_cpu,odx_clock_sound,odx_cpu_cores,odx_ramtweaks,last_game_selected,odx_cheat,romdir,
+		odx_rotation_direction,odx_flip_x,odx_flip_y);
 		fclose(f);
 		/* sync(); */
 	}
@@ -659,35 +743,50 @@ void execute_game (char *playemu, char *playgame, int restart)
 	}
 
 	/* odx_video_aspect */
-	if ((odx_video_aspect==1) || (odx_video_aspect==6))
+	if ((odx_video_aspect==SCALE_HORIZONTAL) || (odx_video_aspect==ROTATE_SCALE_HORIZONTAL))
 	{
 		args[n]="-horizscale"; n++;
 		args[n]="-nodirty"; n++;
 	}
-	if ((odx_video_aspect==2) || (odx_video_aspect==7))
+	if ((odx_video_aspect==SCALE_BEST) || (odx_video_aspect==ROTATE_SCALE_BEST))
 	{
 		args[n]="-bestscale"; n++;
 		args[n]="-nodirty"; n++;
 	}
-	if ((odx_video_aspect==3) || (odx_video_aspect==8))
+	if ((odx_video_aspect==SCALE_FAST) || (odx_video_aspect==ROTATE_SCALE_FAST))
 	{
 		args[n]="-fastscale"; n++;
 		args[n]="-nodirty"; n++;
 	}
-	if ((odx_video_aspect==4) || (odx_video_aspect==9))
+	if ((odx_video_aspect==SCALE_HALFSIZE) || (odx_video_aspect==ROTATE_SCALE_HALFSIZE))
 	{
 		args[n]="-halfscale"; n++;
 		args[n]="-nodirty"; n++;
 	}
-	if ((odx_video_aspect>=5) && (odx_video_aspect<=9))
+	if ((odx_video_aspect==SCALE_HARDWARE) || (odx_video_aspect==ROTATE_SCALE_HARDWARE))
+	{
+		args[n]="-hardwarescale"; n++;
+		args[n]="-nodirty"; n++;
+	}
+	if ((odx_video_aspect>=ROTATE) && (odx_video_aspect<=ROTATE_SCALE_HARDWARE))
 	{
 		args[n]="-rotatecontrols"; n++;
 		#ifdef _GCW0_
 		// rotate left and use right stick
-		args[n]="-rol"; n++;
+		if (odx_rotation_direction == ROTATE_LEFT) {
+		    args[n]="-rol"; n++;
+		} else {
+		    args[n]="-ror"; n++;
+		}
 		#else
 		args[n]="-ror"; n++;
 		#endif
+	}
+	if (odx_flip_x==FLIP_ON) {
+	    args[n]="-flipx"; n++;
+	}
+	if (odx_flip_y==FLIP_ON) {
+	    args[n]="-flipy"; n++;
 	}
 	/* odx_video_sync */
 	if (odx_video_sync==1)
@@ -695,7 +794,7 @@ void execute_game (char *playemu, char *playgame, int restart)
 		args[n]="-nodirty"; n++;
 		args[n]="-waitvsync"; n++;
 	}
-	else if ((odx_video_sync==2) || (odx_video_aspect==1) || (odx_video_aspect==9))
+	else if ((odx_video_sync==2) || (odx_video_aspect==SCALE_HORIZONTAL) || (odx_video_aspect==ROTATE_SCALE_HALFSIZE))
 	{
 		args[n]="-nodirty"; n++;
 	}
@@ -1055,6 +1154,7 @@ int main (int argc, char **argv)
 	strcpy(romdir,"");
 	
 	/* Open dingux Initialization */
+	determine_device_scale = false;
 	odx_init(1000,16,44100,16,0,60);
 
 	/* Show intro screen */

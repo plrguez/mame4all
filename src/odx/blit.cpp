@@ -88,7 +88,7 @@ void blitscreen_dirty1_color8(struct osd_bitmap *bitmap)
 	int width=(bitmap->line[1] - bitmap->line[0]);
 	unsigned char *lb=bitmap->line[skiplines] + skipcolumns;
 
-	if (SDL_MUSTLOCK(video)) SDL_LockSurface(video);
+	if (SDL_MUSTLOCK(layer)) SDL_LockSurface(layer);
 
 	register unsigned short *address=SCREEN8 + gfx_xoffset + (gfx_yoffset * gfx_width);
 
@@ -119,7 +119,7 @@ void blitscreen_dirty1_color8(struct osd_bitmap *bitmap)
 		lb += 16 * width;
 		address += 16 * gfx_width;
 	}
-	if (SDL_MUSTLOCK(video)) SDL_UnlockSurface(video);
+	if (SDL_MUSTLOCK(layer)) SDL_UnlockSurface(layer);
 	FLIP_VIDEO
 }
 
@@ -329,20 +329,20 @@ INLINE void blitscreen_dirty0_color8_fitscale_merge0(struct osd_bitmap *bitmap)
 
 void blitscreen_dirty0_color8(struct osd_bitmap *bitmap)
 {
-	if (SDL_MUSTLOCK(video)) SDL_LockSurface(video);
-	if (video_scale == 1) /* Horizontal Only */
+	if (SDL_MUSTLOCK(layer)) SDL_LockSurface(layer);
+	if (video_scale == SCALE_HORIZONTAL) /* Horizontal Only */
 	{
 		blitscreen_dirty0_color8_horzscale(bitmap);
 	}
-	else if (video_scale == 2) /* Half Scale */
+	else if (video_scale == SCALE_HALFSIZE) /* Half Scale */
 	{
 		blitscreen_dirty0_color8_halfscale(bitmap);
 	}
-	else if (video_scale == 3) /* Best Fit Scale */
+	else if (video_scale == SCALE_BEST) /* Best Fit Scale */
 	{
 		blitscreen_dirty0_color8_fitscale_merge1(bitmap);
 	}
-	else if (video_scale == 4) /* Fast Fit Scale */
+	else if (video_scale == SCALE_FAST) /* Fast Fit Scale */
 	{
 		blitscreen_dirty0_color8_fitscale_merge0(bitmap);
 	}
@@ -350,7 +350,7 @@ void blitscreen_dirty0_color8(struct osd_bitmap *bitmap)
 	{
 		blitscreen_dirty0_color8_noscale(bitmap);
 	}
-	if (SDL_MUSTLOCK(video)) SDL_UnlockSurface(video);
+	if (SDL_MUSTLOCK(layer)) SDL_UnlockSurface(layer);
 	FLIP_VIDEO
 }
 
@@ -360,7 +360,7 @@ void blitscreen_dirty1_palettized16(struct osd_bitmap *bitmap)
 	int width=(bitmap->line[1] - bitmap->line[0])>>1;
 	unsigned short *lb=((unsigned short*)(bitmap->line[skiplines])) + skipcolumns;
 
-	if (SDL_MUSTLOCK(video)) SDL_LockSurface(video);
+	if (SDL_MUSTLOCK(layer)) SDL_LockSurface(layer);
 	
 	register unsigned short *address=SCREEN16 + gfx_xoffset + (gfx_yoffset * gfx_width);
 
@@ -395,7 +395,7 @@ void blitscreen_dirty1_palettized16(struct osd_bitmap *bitmap)
 		address += 16 * gfx_width;
 	}
 	
-	if (SDL_MUSTLOCK(video)) SDL_UnlockSurface(video);
+	if (SDL_MUSTLOCK(layer)) SDL_UnlockSurface(layer);
 	FLIP_VIDEO
 }
 
@@ -598,21 +598,21 @@ INLINE void blitscreen_dirty0_palettized16_fitscale_merge1(struct osd_bitmap *bi
 
 void blitscreen_dirty0_palettized16(struct osd_bitmap *bitmap)
 {
-	if (SDL_MUSTLOCK(video)) SDL_LockSurface(video);
+	if (SDL_MUSTLOCK(layer)) SDL_LockSurface(layer);
 	
-	if (video_scale == 1) /* Horizontal Only */
+	if (video_scale == SCALE_HORIZONTAL) /* Horizontal Only */
 	{
 		blitscreen_dirty0_palettized16_horzscale(bitmap);
 	}
-	else if (video_scale == 2) /* Half Scale */
+	else if (video_scale == SCALE_HALFSIZE) /* Half Scale */
 	{
 		blitscreen_dirty0_palettized16_halfscale(bitmap);
 	}
-	else if (video_scale == 3) /* Best Fit Scale */
+	else if (video_scale == SCALE_BEST) /* Best Fit Scale */
 	{
 		blitscreen_dirty0_palettized16_fitscale_merge1(bitmap);
 	}
-	else if (video_scale == 4) /* Fast Fit Scale */
+	else if (video_scale == SCALE_FAST) /* Fast Fit Scale */
 	{
 		blitscreen_dirty0_palettized16_fitscale_merge0(bitmap);
 	}
@@ -621,7 +621,7 @@ void blitscreen_dirty0_palettized16(struct osd_bitmap *bitmap)
 		blitscreen_dirty0_palettized16_noscale(bitmap);
 	}
 	
-	if (SDL_MUSTLOCK(video)) SDL_UnlockSurface(video);
+	if (SDL_MUSTLOCK(layer)) SDL_UnlockSurface(layer);
 	FLIP_VIDEO
 }
 
@@ -860,21 +860,21 @@ INLINE void blitscreen_dirty0_color16_fitscale_merge1(struct osd_bitmap *bitmap)
 
 void blitscreen_dirty0_color16(struct osd_bitmap *bitmap)
 {
-	if (SDL_MUSTLOCK(video)) SDL_LockSurface(video);
+	if (SDL_MUSTLOCK(layer)) SDL_LockSurface(layer);
 	
-	if (video_scale == 1) /* Horizontal Only */
+	if (video_scale == SCALE_HORIZONTAL) /* Horizontal Only */
 	{
 		blitscreen_dirty0_color16_horzscale(bitmap);
 	}
-	else if (video_scale == 2) /* Half Scale */
+	else if (video_scale == SCALE_HALFSIZE) /* Half Scale */
 	{
 		blitscreen_dirty0_color16_halfscale(bitmap);
 	}
-	else if (video_scale == 3) /* Best Fit Scale */
+	else if (video_scale == SCALE_BEST) /* Best Fit Scale */
 	{
 		blitscreen_dirty0_color16_fitscale_merge1(bitmap);
 	}
-	else if (video_scale == 4) /* Fast Fit Scale */
+	else if (video_scale == SCALE_FAST) /* Fast Fit Scale */
 	{
 		blitscreen_dirty0_color16_fitscale_merge0(bitmap);
 	}
@@ -883,6 +883,6 @@ void blitscreen_dirty0_color16(struct osd_bitmap *bitmap)
 		blitscreen_dirty0_color16_noscale(bitmap);
 	}
 	
-	if (SDL_MUSTLOCK(video)) SDL_UnlockSurface(video);
+	if (SDL_MUSTLOCK(layer)) SDL_UnlockSurface(layer);
 	FLIP_VIDEO
 }

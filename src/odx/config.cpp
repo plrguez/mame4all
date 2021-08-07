@@ -53,6 +53,7 @@ int fast_sound=0;
 
 /* from minimal.c */
 extern int rotate_controls;
+extern int ror;
 
 static struct { char *name; int id; } joy_table[] =
 {
@@ -359,6 +360,9 @@ void parse_cmdline (int argc, char **argv, int game_index)
 	}
 
 	/* break up resolution into gfx_width and gfx_height */
+#ifdef _GCW0_
+	extern int odx_device_scale(bool determine);
+#endif
 	gfx_height = gfx_width = 0;
 	if (strcasecmp (resolution, "auto") != 0)
 	{
@@ -373,6 +377,12 @@ void parse_cmdline (int argc, char **argv, int game_index)
 		options.vector_width = gfx_width;
 		options.vector_height = gfx_height;
 	}
+#ifdef _GCW0_
+	else if (odx_device_scale(true) == 2) {
+		options.vector_width = 640;
+		options.vector_height = 480;	    
+	}
+#endif
 
 	/* convert joystick name into an Allegro-compliant joystick signature */
 	joystick = -2; /* default to invalid value */
@@ -404,4 +414,5 @@ void parse_cmdline (int argc, char **argv, int game_index)
 
 	/* Rotate controls */
 	rotate_controls       = get_bool("config", "rotatecontrols", NULL, 0);
+	ror = options.ror;
 }

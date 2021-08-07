@@ -106,13 +106,15 @@ int main (int argc, char **argv)
 		if (strcasecmp(argv[i],"-fame") == 0)
 			use_fame=1;
 		if (strcasecmp(argv[i],"-horizscale") == 0)
-			video_scale=1;
+			video_scale=SCALE_HORIZONTAL;
 		if (strcasecmp(argv[i],"-halfscale") == 0)
-			video_scale=2;
+			video_scale=SCALE_HALFSIZE;
 		if (strcasecmp(argv[i],"-bestscale") == 0)
-			video_scale=3;
+			video_scale=SCALE_BEST;
 		if (strcasecmp(argv[i],"-fastscale") == 0)
-			video_scale=4;
+			video_scale=SCALE_FAST;
+		if (strcasecmp(argv[i],"-hardwarescale") == 0)
+			video_scale=SCALE_HARDWARE;
 		if (strcasecmp(argv[i],"-border") == 0)
 			video_border=1;
 		if (strcasecmp(argv[i],"-aspect") == 0)
@@ -130,6 +132,7 @@ int main (int argc, char **argv)
 	}
 
 	/* Initialization */
+	determine_device_scale=true;
 	odx_init(1000,16,44100,16,0,60);
 
 	/* check for frontend options */
