@@ -16,7 +16,7 @@
 
 #define COMPATCORES 1
 
-char build_version[] = "GCW0 V1.2 R7";
+char build_version[] = "GCW0 OD Beta V1.2 R7";
 
 /* Remove splash screen */
 // static unsigned char splash_bmp[BMP_SIZE];
@@ -187,7 +187,7 @@ static void game_list_view(int *pos) {
 	odx_gamelist_text_out( 4, 30,"Select ROM");
 	odx_gamelist_text_out( 4, 230,"A=Select Game/Start  B=Back");
 	odx_gamelist_text_out( 268, 230,"L+R=Exit");
-	odx_gamelist_text_out( 244,2,build_version);
+	odx_gamelist_text_out( 196,2,build_version);
 
 	/* Check Limits */
 	if (*pos<0)
