@@ -16,7 +16,7 @@
 
 #define COMPATCORES 1
 
-char build_version[] = "GCW0 OD Beta V1.2 R7";
+char build_version[] = "OD Beta V1.2 R7";
 
 /* Remove splash screen */
 // static unsigned char splash_bmp[BMP_SIZE];
@@ -190,7 +190,7 @@ static void game_list_view(int *pos) {
 	odx_gamelist_text_out( 4, 30,"Select ROM");
 	odx_gamelist_text_out( 4, 230,"A=Select Game/Start  B=Back");
 	odx_gamelist_text_out( 268, 230,"L+R=Exit");
-	odx_gamelist_text_out( 196,2,build_version);
+	odx_gamelist_text_out( 228,2,build_version);
 
 	/* Check Limits */
 	if (*pos<0)
@@ -321,7 +321,7 @@ static int show_options(char *game)
 		odx_gamelist_text_out( 4, 30,"Game Options");
 		odx_gamelist_text_out( 4, 230,"A=Select Game/Start  B=Back");
 		odx_gamelist_text_out( 268, 230,"L+R=Exit");
-		odx_gamelist_text_out( 196,2,build_version);
+		odx_gamelist_text_out( 228,2,build_version);
 
 		/* Draw the options */
 		strncpy (text,game_list_description(last_game_selected),33);
@@ -1128,7 +1128,7 @@ signed int get_romdir(char *result) {
 			odx_gamelist_text_out( 4, 215,current_dir_short );
 			odx_gamelist_text_out( 4, 230,"A=Enter dir START=Select dir");
 			odx_gamelist_text_out( 280, 230,"B=Quit");
-			odx_gamelist_text_out( 196,2,build_version);
+			odx_gamelist_text_out( 228,2,build_version);
 			
 			for(i = 0, current_filedir_number = i + current_filedir_scroll_value; i < FILE_LIST_ROWS; i++, current_filedir_number++) {
 #define CHARLEN ((320/6)-2)
