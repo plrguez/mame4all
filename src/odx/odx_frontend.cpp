@@ -175,6 +175,30 @@ static void game_list_init(int argc)
 		game_list_init_cache();
 }
 
+static bool file_exists (char *filename) {
+  struct stat   buffer;   
+  return (stat (filename, &buffer) == 0);
+}
+
+static bool game_config_exists(char *game) {
+	char filename[512];
+
+	/* Delete game configuration if it exists */
+	sprintf(filename,"%scfg/%s.cfg",mamedir,game);
+	return (file_exists(filename));
+}
+
+static int delete_game_config(char *game)
+{
+	char filename[512];
+
+	/* Delete game configuration if it exists */
+	sprintf(filename,"%scfg/%s.cfg",mamedir,game);
+	if (file_exists(filename)) {
+	    return remove(filename);
+	}
+}
+
 static void game_list_view(int *pos) {
 
 	int i;
@@ -189,6 +213,8 @@ static void game_list_view(int *pos) {
 	/* draw text */
 	odx_gamelist_text_out( 4, 30,"Select ROM");
 	odx_gamelist_text_out( 4, 230,"A=Select Game/Start  B=Back");
+	if (game_config_exists("default"))
+	    odx_gamelist_text_out( 180, 230,"X=Del.def.cfg");
 	odx_gamelist_text_out( 268, 230,"L+R=Exit");
 	odx_gamelist_text_out( 228,2,build_version);
 
@@ -320,6 +346,8 @@ static int show_options(char *game)
 		/* draw text */
 		odx_gamelist_text_out( 4, 30,"Game Options");
 		odx_gamelist_text_out( 4, 230,"A=Select Game/Start  B=Back");
+		if (game_config_exists(game))
+		    odx_gamelist_text_out( 180, 230,"X=Delete cfg");
 		odx_gamelist_text_out( 268, 230,"L+R=Exit");
 		odx_gamelist_text_out( 228,2,build_version);
 
@@ -709,7 +737,10 @@ static int show_options(char *game)
 			/* Selected game will be run */
 			return 1;
 		}
-		else if ((ExKey & OD_X) || (ExKey & OD_Y) || (ExKey & OD_B))
+		else if ((ExKey & OD_X)) {
+		    delete_game_config(game);
+		}
+		else if ((ExKey & OD_Y) || (ExKey & OD_B))
 		{
 			/* Return To Menu */
 			return 0;
@@ -783,6 +814,10 @@ static void select_game(char *emu, char *game)
 		if (ExKey & OD_DOWN) last_game_selected++;
 		if (ExKey & OD_LEFT) last_game_selected-=22; // ALEK 21
 		if (ExKey & OD_RIGHT) last_game_selected+=22; // ALEK 21
+		
+		/* Delete default config */
+		if (ExKey & OD_X)
+		    delete_game_config("default");
 
 		if ((ExKey & OD_A) || (ExKey & OD_START) )
 		{
