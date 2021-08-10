@@ -455,6 +455,7 @@ static int is_joy_axis_pressed (int axis, int dir, int ExKey)
 
 int osd_is_joy_pressed(int joycode)
 {
+	extern int rotate_controls, ror;
 	int joy_num,stick;
 
 
@@ -462,11 +463,11 @@ int osd_is_joy_pressed(int joycode)
 	switch (joycode)
 	{
 		case MOUSE_BUTTON(1):
-			return ExKey1 & OD_B; break;
+			return ExKey1 & ( !rotate_controls ? OD_B : ( ror ? OD_Y : OD_A ) ); break;
 		case MOUSE_BUTTON(2):
-			return ExKey1 & OD_A; break;
+			return ExKey1 & ( !rotate_controls ? OD_A : ( ror ? OD_B : OD_X ) ); break;
 		case MOUSE_BUTTON(3):
-			return ExKey1 & OD_Y; break;
+			return ExKey1 & ( !rotate_controls ? OD_Y : ( ror ? OD_X : OD_B) ); break;
 	}
 
 	joy_num = GET_JOYCODE_JOY(joycode);
