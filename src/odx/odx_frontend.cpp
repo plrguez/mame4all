@@ -36,6 +36,7 @@ int odx_rotation_direction=ROTATE_LEFT;
 int odx_keep_aspect=VIDEO_FULLSCREEN;
 int odx_video_filter=VIDEO_FILTER_BICUBIC;
 int odx_bicubic_level=8;
+int odx_flip_xy=FLIP_NONE;
 int odx_flip_x=FLIP_OFF;
 int odx_flip_y=FLIP_OFF;
 int odx_video_sync=0;   /* No vsync */
@@ -321,6 +322,29 @@ static int load_game_config(char *game)
 	return 1;
 }
 
+static void flip_screen_from_xy(void)
+{
+	if (odx_flip_x && odx_flip_y)
+	    odx_flip_xy=FLIP_XY;
+	else if (odx_flip_x && !odx_flip_y)
+	    odx_flip_xy=FLIP_X;
+	else if (!odx_flip_x && odx_flip_y)
+	    odx_flip_xy=FLIP_Y;
+	else
+	    odx_flip_xy=FLIP_NONE;
+}
+
+static void flip_screen_to_xy(void)
+{
+	switch (odx_flip_xy) {
+	    case FLIP_NONE: odx_flip_x=FLIP_OFF; odx_flip_y=FLIP_OFF; break;
+	    case FLIP_XY:   odx_flip_x=FLIP_ON;  odx_flip_y=FLIP_ON; break;
+	    case FLIP_X:    odx_flip_x=FLIP_ON;  odx_flip_y=FLIP_OFF; break;
+	    case FLIP_Y:    odx_flip_x=FLIP_OFF; odx_flip_y=FLIP_ON; break;
+	    default:        odx_flip_x=FLIP_OFF; odx_flip_y=FLIP_OFF; break;
+	}
+}
+
 static int show_options(char *game)
 {
 	unsigned long ExKey=0;
@@ -334,7 +358,10 @@ static int show_options(char *game)
 	int i=0;
 
 	/* Read game configuration */
-	load_game_config(game);
+	if (!load_game_config(game))
+	    flip_screen_from_xy();
+	else
+	    odx_flip_xy=FLIP_NONE;
 	
 	while(1)
 	{
@@ -430,20 +457,14 @@ static int show_options(char *game)
 		}
 		
 		
-		/* Flip X */
+		/* Flip XY */
 		y_Pos += 10;
-		switch (odx_flip_x)
+		switch (odx_flip_xy)
 		{
-			case FLIP_ON:                 odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Flip X         On"); break;
-			case FLIP_OFF:                odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Flip X         Off"); break;
-		}
-		
-		/* Flip Y */
-		y_Pos += 10;
-		switch (odx_flip_y)
-		{
-			case FLIP_ON:                 odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Flip Y         On"); break;
-			case FLIP_OFF:                odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Flip Y         Off"); break;
+			case FLIP_NONE:               odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Flip           Off"); break;
+			case FLIP_XY:                 odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Flip           XY"); break;
+			case FLIP_X:                  odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Flip           X"); break;
+			case FLIP_Y:                  odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Flip           Y"); break;
 		}
 		
 		/* (2) Video Sync */
@@ -622,33 +643,20 @@ static int show_options(char *game)
 				} else {
 				    break;
 				}
-			case GO_FLIP_X:
+			case GO_FLIP_XY:
 				if(ExKey & OD_RIGHT)
 				{
-					odx_flip_x++;
-					if (odx_flip_x>=FLIP_OFF)
-						odx_flip_x=FLIP_ON;
+					odx_flip_xy++;
+					if (odx_flip_xy>FLIP_Y)
+						odx_flip_xy=FLIP_NONE;
 				}
 				else
 				{
-					odx_flip_x--;
-					if (odx_flip_x<=FLIP_ON)
-						odx_flip_x=FLIP_OFF;
+					odx_flip_xy--;
+					if (odx_flip_xy<FLIP_NONE)
+						odx_flip_xy=FLIP_Y;
 				}
-				break;
-			case GO_FLIP_Y:
-				if(ExKey & OD_RIGHT)
-				{
-					odx_flip_y++;
-					if (odx_flip_y>=FLIP_OFF)
-						odx_flip_y=FLIP_ON;
-				}
-				else
-				{
-					odx_flip_y--;
-					if (odx_flip_y<=FLIP_ON)
-						odx_flip_y=FLIP_OFF;
-				}
+				flip_screen_to_xy();
 				break;
 			case GO_VIDEO_SYNC:
 				odx_video_sync=odx_video_sync+1;

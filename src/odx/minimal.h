@@ -75,6 +75,13 @@ enum e_flip_xy {
     FLIP_ON,
 };
 
+enum e_flip_xy_screen {
+    FLIP_NONE,
+    FLIP_XY,
+    FLIP_X,
+    FLIP_Y,
+};
+
 enum e_keep_aspect {
     VIDEO_FULLSCREEN,
     VIDEO_KEEP_ASPECT,
@@ -94,8 +101,7 @@ enum e_game_options {
     GO_VIDEO_FILTER,
     GO_BICUBIC_LEVEL,
     GO_VIDEO_ROTATION,
-    GO_FLIP_X,
-    GO_FLIP_Y,
+    GO_FLIP_XY,
     GO_VIDEO_SYNC,
     GO_FRAME_SKIP,
     GO_SOUND,
