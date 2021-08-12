@@ -199,6 +199,8 @@ static int delete_game_config(char *game)
 	if (file_exists(filename)) {
 	    return remove(filename);
 	}
+	
+	return 0;
 }
 
 static void game_list_view(int *pos) {
