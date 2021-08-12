@@ -101,6 +101,7 @@ enum e_game_options {
     GO_VIDEO_FILTER,
     GO_BICUBIC_LEVEL,
     GO_VIDEO_ROTATION,
+    GO_BUTTONS_ROTATION,
     GO_FLIP_XY,
     GO_VIDEO_SYNC,
     GO_FRAME_SKIP,
@@ -126,6 +127,7 @@ extern unsigned int				odx_sound_rate;
 extern int						odx_sound_stereo;
 
 extern int						rotate_controls;
+extern int						rotate_buttons;
 
 #ifdef _GCW0_
 extern SDL_Joystick				*odx_joyanalog;

@@ -384,13 +384,13 @@ const struct JoystickInfo *osd_get_joy_list(void)
 
 static int is_joy_button_pressed (int button, int ExKey)
 {
-	extern int rotate_controls, ror;
+	extern int rotate_buttons, ror;
 	switch (button)
 	{
-		case 0: return ExKey & ( !rotate_controls ? OD_B : ( ror ? OD_Y : OD_A ) ); break;
-		case 1: return ExKey & ( !rotate_controls ? OD_A : ( ror ? OD_B : OD_X ) ); break;
-		case 2: return ExKey & ( !rotate_controls ? OD_Y : ( ror ? OD_X : OD_B) ); break;
-		case 3: return ExKey & ( !rotate_controls ? OD_X : ( ror ? OD_A : OD_Y ) ); break;
+		case 0: return ExKey & ( !rotate_buttons ? OD_B : ( ror ? OD_Y : OD_A ) ); break;
+		case 1: return ExKey & ( !rotate_buttons ? OD_A : ( ror ? OD_B : OD_X ) ); break;
+		case 2: return ExKey & ( !rotate_buttons ? OD_Y : ( ror ? OD_X : OD_B) ); break;
+		case 3: return ExKey & ( !rotate_buttons ? OD_X : ( ror ? OD_A : OD_Y ) ); break;
 		case 4: return ExKey & OD_L; break;
 		case 5: return ExKey & OD_R; break;
 		default: break;
@@ -455,7 +455,7 @@ static int is_joy_axis_pressed (int axis, int dir, int ExKey)
 
 int osd_is_joy_pressed(int joycode)
 {
-	extern int rotate_controls, ror;
+	extern int rotate_buttons, ror;
 	int joy_num,stick;
 
 
@@ -463,11 +463,11 @@ int osd_is_joy_pressed(int joycode)
 	switch (joycode)
 	{
 		case MOUSE_BUTTON(1):
-			return ExKey1 & ( !rotate_controls ? OD_B : ( ror ? OD_Y : OD_A ) ); break;
+			return ExKey1 & ( !rotate_buttons ? OD_B : ( ror ? OD_Y : OD_A ) ); break;
 		case MOUSE_BUTTON(2):
-			return ExKey1 & ( !rotate_controls ? OD_A : ( ror ? OD_B : OD_X ) ); break;
+			return ExKey1 & ( !rotate_buttons ? OD_A : ( ror ? OD_B : OD_X ) ); break;
 		case MOUSE_BUTTON(3):
-			return ExKey1 & ( !rotate_controls ? OD_Y : ( ror ? OD_X : OD_B) ); break;
+			return ExKey1 & ( !rotate_buttons ? OD_Y : ( ror ? OD_X : OD_B) ); break;
 	}
 
 	joy_num = GET_JOYCODE_JOY(joycode);

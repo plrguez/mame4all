@@ -47,6 +47,7 @@ unsigned int			odx_vol = 100;
 unsigned int			odx_sound_rate=44100;
 int						odx_sound_stereo=1;
 int						rotate_controls=0;
+int						rotate_buttons=0;
 int						ror=0;
 unsigned char			odx_keys[OD_KEY_MAX];
 #ifdef _GCW0_
@@ -143,11 +144,26 @@ unsigned int odx_joystick_read()
 			if (axis_x >  32) res |= OD_DOWN;
 		}
 		
-		if (SDL_JoystickGetButton(odx_joyanalog,0)) { res |=  OD_A;  }  // BUTTON A
-		if (SDL_JoystickGetButton(odx_joyanalog,1)) { res |=  OD_B; }  // BUTTON B
+		/* These are not used in OD Beta */
+		if (!rotate_buttons) {
+		    if (SDL_JoystickGetButton(odx_joyanalog,0)) { res |=  OD_A;  }  // BUTTON A
+		    if (SDL_JoystickGetButton(odx_joyanalog,1)) { res |=  OD_B; }  // BUTTON B
 
-		if (SDL_JoystickGetButton(odx_joyanalog,2)) { res |=  OD_X;  }  // BUTTON X
-		if (SDL_JoystickGetButton(odx_joyanalog,3))  { res |=  OD_Y;  }   // BUTTON Y
+		    if (SDL_JoystickGetButton(odx_joyanalog,2)) { res |=  OD_X;  }  // BUTTON X
+		    if (SDL_JoystickGetButton(odx_joyanalog,3))  { res |=  OD_Y;  }   // BUTTON Y
+		} else if (ror) {
+		    if (SDL_JoystickGetButton(odx_joyanalog,0)) { res |=  OD_B;  }  // BUTTON B
+		    if (SDL_JoystickGetButton(odx_joyanalog,1)) { res |=  OD_Y; }  // BUTTON Y
+
+		    if (SDL_JoystickGetButton(odx_joyanalog,2)) { res |=  OD_A;  }  // BUTTON A
+		    if (SDL_JoystickGetButton(odx_joyanalog,3))  { res |=  OD_X;  }   // BUTTON X		    
+		} else {
+		    if (SDL_JoystickGetButton(odx_joyanalog,0)) { res |=  OD_X;  }  // BUTTON X
+		    if (SDL_JoystickGetButton(odx_joyanalog,1)) { res |=  OD_A; }  // BUTTON A
+
+		    if (SDL_JoystickGetButton(odx_joyanalog,2)) { res |=  OD_Y;  }  // BUTTON Y
+		    if (SDL_JoystickGetButton(odx_joyanalog,3))  { res |=  OD_B;  }   // BUTTON B		    
+		}
 
 		if (SDL_JoystickGetButton(odx_joyanalog,4))  { res |=  OD_R;  }  // BUTTON R
 		if (SDL_JoystickGetButton(odx_joyanalog,5))  { res |=  OD_L;  }  // BUTTON L

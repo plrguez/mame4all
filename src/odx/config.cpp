@@ -53,6 +53,7 @@ int fast_sound=0;
 
 /* from minimal.c */
 extern int rotate_controls;
+extern int rotate_buttons;
 extern int ror;
 
 static struct { char *name; int id; } joy_table[] =
@@ -415,4 +416,7 @@ void parse_cmdline (int argc, char **argv, int game_index)
 	/* Rotate controls */
 	rotate_controls       = get_bool("config", "rotatecontrols", NULL, 0);
 	ror = options.ror;
+	
+	/* Rotate buttons */
+	rotate_buttons        = get_bool("config", "rotatebuttons", NULL, 0);
 }

@@ -33,6 +33,7 @@ int odx_freq=336;       /* default dingoo Mhz */
 int odx_video_depth=16; /* MAME video depth */
 int odx_video_aspect=SCALE_BEST; /* Scale best*/
 int odx_rotation_direction=ROTATE_LEFT;
+int odx_buttons_rotation=0;
 int odx_keep_aspect=VIDEO_FULLSCREEN;
 int odx_video_filter=VIDEO_FILTER_BICUBIC;
 int odx_bicubic_level=8;
@@ -312,9 +313,9 @@ static int load_game_config(char *game)
 	sprintf(text,"%s/frontend/%s.cfg",mamedir,game);
 	f=fopen(text,"r");
 	if (f) {
-		fscanf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",&odx_freq,&odx_video_depth,&odx_video_aspect,&odx_video_sync,
+		fscanf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",&odx_freq,&odx_video_depth,&odx_video_aspect,&odx_video_sync,
 		&odx_frameskip,&odx_sound,&odx_clock_cpu,&odx_clock_sound,&odx_cpu_cores,&odx_ramtweaks,&i,&odx_cheat,&odx_gsensor,
-		&odx_rotation_direction,&odx_flip_x,&odx_flip_y,&odx_keep_aspect,&odx_video_filter,&odx_bicubic_level);
+		&odx_rotation_direction,&odx_flip_x,&odx_flip_y,&odx_keep_aspect,&odx_video_filter,&odx_bicubic_level,&odx_buttons_rotation);
 		fclose(f);
 		return 0;
 	}
@@ -456,6 +457,25 @@ static int show_options(char *game)
 			odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Rotate         ----");
 		}
 		
+		/* Buttons rotation */
+		y_Pos += 10;
+		char button_layer[] = "B=1,A=2,Y=3,X=4,L=5,R=6";
+		if (odx_video_aspect>=ROTATE && odx_video_aspect<=ROTATE_SCALE_HARDWARE) {
+			if (odx_buttons_rotation) {
+			    switch (odx_rotation_direction)
+			    {
+				    case ROTATE_LEFT:  sprintf(button_layer,"A=1,X=2,B=3,Y=4,L=5,R=6"); break;
+				    case ROTATE_RIGHT: sprintf(button_layer,"Y=1,B=2,X=3,A=4,L=5,R=6"); break;
+			    }
+			}
+			switch (odx_buttons_rotation)
+			{
+				case 0:            odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Rotate buttons Off  (%s)",button_layer); break;
+				case 1:            odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Rotate buttons On   (%s)",button_layer); break;
+			}
+		} else {
+			odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Rotate buttons ---- (%s)",button_layer);
+		}
 		
 		/* Flip XY */
 		y_Pos += 10;
@@ -643,6 +663,14 @@ static int show_options(char *game)
 				} else {
 				    break;
 				}
+			case GO_BUTTONS_ROTATION:
+				if (odx_video_aspect>=ROTATE && odx_video_aspect<=ROTATE_SCALE_HARDWARE) {
+				    if(ExKey & OD_RIGHT || ExKey & OD_LEFT)
+				    {
+					    odx_buttons_rotation = !odx_buttons_rotation;
+				    }
+				}
+				break;
 			case GO_FLIP_XY:
 				if(ExKey & OD_RIGHT)
 				{
@@ -735,9 +763,9 @@ static int show_options(char *game)
 			sprintf(text,"%s/frontend/%s.cfg",mamedir,game);
 			f=fopen(text,"w");
 			if (f) {
-				fprintf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",odx_freq,odx_video_depth,odx_video_aspect,odx_video_sync,
+				fprintf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",odx_freq,odx_video_depth,odx_video_aspect,odx_video_sync,
 				odx_frameskip,odx_sound,odx_clock_cpu,odx_clock_sound,odx_cpu_cores,odx_ramtweaks,i,odx_cheat,odx_gsensor,
-				odx_rotation_direction,odx_flip_x,odx_flip_y,odx_keep_aspect,odx_video_filter,odx_bicubic_level);
+				odx_rotation_direction,odx_flip_x,odx_flip_y,odx_keep_aspect,odx_video_filter,odx_bicubic_level,odx_buttons_rotation);
 				fclose(f);
 				/* sync(); */
 			}
@@ -773,9 +801,9 @@ void odx_load_config(void) {
 
 	f=fopen(curCfg,"r");
 	if (f) {
-		fscanf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%d,%d,%d,%d,%d,%d",&odx_freq,&odx_video_depth,&odx_video_aspect,&odx_video_sync,
+		fscanf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%d,%d,%d,%d,%d,%d,%d",&odx_freq,&odx_video_depth,&odx_video_aspect,&odx_video_sync,
 		&odx_frameskip,&odx_sound,&odx_clock_cpu,&odx_clock_sound,&odx_cpu_cores,&odx_ramtweaks,&last_game_selected,&odx_cheat,romdir,
-		&odx_rotation_direction,&odx_flip_x,&odx_flip_y,&odx_keep_aspect,&odx_video_filter,&odx_bicubic_level);
+		&odx_rotation_direction,&odx_flip_x,&odx_flip_y,&odx_keep_aspect,&odx_video_filter,&odx_bicubic_level,&odx_buttons_rotation);
 		fclose(f);
 	}
 }
@@ -788,9 +816,9 @@ void odx_save_config(void) {
 	sprintf(curCfg,"%s/frontend/mame.cfg",mamedir);
 	f=fopen(curCfg,"w");
 	if (f) {
-		fprintf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s ,%d,%d,%d,%d,%d,%d",odx_freq,odx_video_depth,odx_video_aspect,odx_video_sync,
+		fprintf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s ,%d,%d,%d,%d,%d,%d,%d",odx_freq,odx_video_depth,odx_video_aspect,odx_video_sync,
 		odx_frameskip,odx_sound,odx_clock_cpu,odx_clock_sound,odx_cpu_cores,odx_ramtweaks,last_game_selected,odx_cheat,romdir,
-		odx_rotation_direction,odx_flip_x,odx_flip_y,odx_keep_aspect,odx_video_filter,odx_bicubic_level);
+		odx_rotation_direction,odx_flip_x,odx_flip_y,odx_keep_aspect,odx_video_filter,odx_bicubic_level,odx_buttons_rotation);
 		fclose(f);
 		/* sync(); */
 	}
@@ -913,6 +941,9 @@ void execute_game (char *playemu, char *playgame, int restart)
 	if ((odx_video_aspect>=ROTATE) && (odx_video_aspect<=ROTATE_SCALE_HARDWARE))
 	{
 		args[n]="-rotatecontrols"; n++;
+		if (odx_buttons_rotation) {
+		    args[n]="-rotatebuttons"; n++;
+		}
 		#ifdef _GCW0_
 		// rotate left and use right stick
 		if (odx_rotation_direction == ROTATE_LEFT) {
